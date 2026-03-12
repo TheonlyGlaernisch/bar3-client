@@ -65,24 +65,9 @@ import Vue from 'vue';
     isShowing = false;
     items: SideBarItem[] = [
       {
-        title: 'Dashboard',
-        icon: 'mdi-view-dashboard',
+        title: 'Account',
+        icon: 'mdi-account-circle',
         path: '/',
-      },
-      {
-        title: 'Configuration',
-        icon: 'mdi-cog',
-        path: '/config',
-      },
-      {
-        title: 'Message Creator',
-        icon: 'mdi-email',
-        path: '/message-creator',
-      },
-      {
-        title: 'Analytics',
-        icon: 'mdi-chart-timeline-variant-shimmer',
-        path: '/analytics',
       },
       {
         title: 'About',
