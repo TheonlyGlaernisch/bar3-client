@@ -1,40 +1,22 @@
 import Vue from 'vue'
 import VueRouter, { RouteConfig } from 'vue-router'
 
-import Home from '../views/Home.vue'
+import AccountManager from '../components/AccountManager.vue'
 import About from '../views/About.vue'
-import Configuration from '../views/Configuration.vue';
-import MessageCreator from '../views/MessageCreator.vue';
-import Help from '../views/Help.vue';
-import Analytics from '../views/Analytics.vue';
+import Help from '../views/Help.vue'
 
 Vue.use(VueRouter)
 
 const routes: Array<RouteConfig> = [
   {
     path: '/',
-    name: 'Home',
-    component: Home
+    name: 'Account',
+    component: AccountManager
   },
   {
     path: '/about',
     name: 'About',
     component: About
-  },
-  {
-    path: '/config',
-    name: 'Configuration',
-    component: Configuration
-  },
-  {
-    path: '/message-creator',
-    name: 'Message Creator',
-    component: MessageCreator
-  },
-  {
-    path: '/analytics',
-    name: 'Analytics Dashboard',
-    component: Analytics,
   },
   {
     path: '/help',
