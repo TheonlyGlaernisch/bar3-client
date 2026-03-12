@@ -86,7 +86,7 @@ export default class AccountManager extends Vue {
         type: 'success',
         text: 'Account loaded successfully'
       };
-    } catch (err: unknown) {
+    } catch (err) {
       const statusCode = this.getStatusCode(err);
       if (statusCode === 401 || statusCode === 403) {
         this.error = 'Invalid API key';
@@ -107,7 +107,7 @@ export default class AccountManager extends Vue {
         type: 'success',
         text: 'Message saved successfully'
       };
-    } catch (err: unknown) {
+    } catch (err) {
       this.error = 'Failed to save message';
     }
   }
