@@ -1,4 +1,4 @@
-import { apiFetch } from '@/utilities/authFetch';
+import { apiFetch } from 'src/utilities/autoFetch.ts';
 
 export default async function sendMessage(
   messageHTML: string,
@@ -25,3 +25,4 @@ export default async function sendMessage(
 
   return true;
 }
+
