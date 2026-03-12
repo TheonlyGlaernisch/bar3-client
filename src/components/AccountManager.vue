@@ -2,12 +2,6 @@
   <div class="account-manager">
     <h2>Account Management</h2>
 
-    <div class="api-key-create">
-      <button @click="createApiKey" :disabled="creatingKey">
-        {{ creatingKey ? 'Creating...' : 'Create New API Key' }}
-      </button>
-    </div>
-
     <div class="api-key-section">
       <label for="apiKey">API Key:</label>
       <input
@@ -56,34 +50,26 @@
 import { Component, Vue } from 'vue-property-decorator';
 import { accountApi } from '../utilities/AccountAPI';
 
+interface AccountData {
+  apiKey: string;
+  customMessage: string;
+  createdAt: string;
+}
+
 @Component
 export default class AccountManager extends Vue {
-  apiKey: string = localStorage.getItem('apiKey') || '';
-  customMessage: string = '';
-  account: any = null;
-  error: string = '';
-  creatingKey = false;
+  apiKey = localStorage.getItem('apiKey') || '';
+  customMessage = '';
+  account: AccountData | null = null;
+  error = '';
   statusMessage: { type: string; text: string } | null = null;
 
-  async createApiKey() {
-    this.error = '';
-    this.statusMessage = null;
-    this.creatingKey = true;
-
-    try {
-      const result = await accountApi.createApiKey();
-      this.apiKey = result.apiKey;
-      localStorage.setItem('apiKey', this.apiKey);
-
-      this.statusMessage = {
-        type: 'success',
-        text: 'New API key created. Load account to continue.'
-      };
-    } catch (err: any) {
-      this.error = 'Failed to create API key';
-    } finally {
-      this.creatingKey = false;
+  private getStatusCode(err: unknown): number | undefined {
+    if (typeof err === 'object' && err !== null && 'response' in err) {
+      const response = (err as { response?: { status?: number } }).response;
+      return response?.status;
     }
+    return undefined;
   }
 
   async loadAccount() {
@@ -100,8 +86,9 @@ export default class AccountManager extends Vue {
         type: 'success',
         text: 'Account loaded successfully'
       };
-    } catch (err: any) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
+    } catch (err: unknown) {
+      const statusCode = this.getStatusCode(err);
+      if (statusCode === 401 || statusCode === 403) {
         this.error = 'Invalid API key';
       } else {
         this.error = 'Failed to load account';
@@ -120,13 +107,12 @@ export default class AccountManager extends Vue {
         type: 'success',
         text: 'Message saved successfully'
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       this.error = 'Failed to save message';
     }
   }
 
   maskApiKey(key: string): string {
-    if (!key || key.length < 12) return key;
     return key.substring(0, 8) + '...' + key.substring(key.length - 4);
   }
 
@@ -147,7 +133,6 @@ export default class AccountManager extends Vue {
   border-radius: 4px;
 }
 
-.api-key-create,
 .api-key-section,
 .message-section {
   margin: 20px 0;
@@ -170,7 +155,6 @@ textarea {
 
 button {
   margin-top: 10px;
-  margin-right: 8px;
   padding: 10px 20px;
   background-color: #4caf50;
   color: white;
