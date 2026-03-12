@@ -64,23 +64,42 @@ import Vue from 'vue';
   export default class SideBar extends Vue {
     isShowing = false;
     items: SideBarItem[] = [
-      {
-        title: 'Account',
-        icon: 'mdi-account-circle',
-        path: '/',
-      },
-      {
-        title: 'About',
-        icon: 'mdi-information',
-        path: '/about',
-      },
-      {
-        title: 'Help',
-        icon: 'mdi-help-circle',
-        path: '/help',
-      },
-    ];
-
+  {
+    title: 'Dashboard',
+    icon: 'mdi-view-dashboard',
+    path: '/dashboard',
+  },
+  {
+    title: 'Configuration',
+    icon: 'mdi-cog',
+    path: '/config',
+  },
+  {
+    title: 'Message Creator',
+    icon: 'mdi-email-edit',
+    path: '/message-creator',
+  },
+  {
+    title: 'Analytics',
+    icon: 'mdi-chart-line',
+    path: '/analytics',
+  },
+  {
+    title: 'Account',
+    icon: 'mdi-account-circle',
+    path: '/account',
+  },
+  {
+    title: 'About',
+    icon: 'mdi-information',
+    path: '/about',
+  },
+  {
+    title: 'Help',
+    icon: 'mdi-help-circle',
+    path: '/help',
+  },
+];
     selectedItem = 0;
 
     goto(path: string) {
@@ -119,3 +138,4 @@ import Vue from 'vue';
     }
   }
 </script>
+
