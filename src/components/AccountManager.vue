@@ -2,6 +2,12 @@
   <div class="account-manager">
     <h2>Account Management</h2>
 
+    <div class="api-key-create">
+      <button @click="createApiKey" :disabled="creatingKey">
+        {{ creatingKey ? 'Creating...' : 'Create New API Key' }}
+      </button>
+    </div>
+
     <div class="api-key-section">
       <label for="apiKey">API Key:</label>
       <input
@@ -48,7 +54,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import { accountApi } from '../utilities/accountApi';
+import { accountApi } from '../utilities/AccountAPI';
 
 @Component
 export default class AccountManager extends Vue {
@@ -56,7 +62,29 @@ export default class AccountManager extends Vue {
   customMessage: string = '';
   account: any = null;
   error: string = '';
+  creatingKey = false;
   statusMessage: { type: string; text: string } | null = null;
+
+  async createApiKey() {
+    this.error = '';
+    this.statusMessage = null;
+    this.creatingKey = true;
+
+    try {
+      const result = await accountApi.createApiKey();
+      this.apiKey = result.apiKey;
+      localStorage.setItem('apiKey', this.apiKey);
+
+      this.statusMessage = {
+        type: 'success',
+        text: 'New API key created. Load account to continue.'
+      };
+    } catch (err: any) {
+      this.error = 'Failed to create API key';
+    } finally {
+      this.creatingKey = false;
+    }
+  }
 
   async loadAccount() {
     this.error = '';
@@ -73,7 +101,7 @@ export default class AccountManager extends Vue {
         text: 'Account loaded successfully'
       };
     } catch (err: any) {
-      if (err.response?.status === 401) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
         this.error = 'Invalid API key';
       } else {
         this.error = 'Failed to load account';
@@ -87,7 +115,7 @@ export default class AccountManager extends Vue {
     this.statusMessage = null;
 
     try {
-      const result = await accountApi.updateMessage(this.apiKey, this.customMessage);
+      await accountApi.updateMessage(this.apiKey, this.customMessage);
       this.statusMessage = {
         type: 'success',
         text: 'Message saved successfully'
@@ -98,6 +126,7 @@ export default class AccountManager extends Vue {
   }
 
   maskApiKey(key: string): string {
+    if (!key || key.length < 12) return key;
     return key.substring(0, 8) + '...' + key.substring(key.length - 4);
   }
 
@@ -118,6 +147,7 @@ export default class AccountManager extends Vue {
   border-radius: 4px;
 }
 
+.api-key-create,
 .api-key-section,
 .message-section {
   margin: 20px 0;
@@ -140,6 +170,7 @@ textarea {
 
 button {
   margin-top: 10px;
+  margin-right: 8px;
   padding: 10px 20px;
   background-color: #4caf50;
   color: white;
