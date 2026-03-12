@@ -2,7 +2,12 @@
   <div class="account-manager">
     <h2>Account Management</h2>
 
-    <div class="api-key-section">
+    <article class="api-help">
+  To send messages Bar 3 requires your API key from Politics and War.
+  To retrieve the key go to
+  <a target="_blank" href="https://politicsandwar.com/account">the account page</a>.
+</article>
+      <div class="api-key-section">
       <label for="apiKey">API Key:</label>
       <input
         id="apiKey"
