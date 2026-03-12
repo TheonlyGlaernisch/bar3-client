@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.VUE_APP_API_URL || 'http://localhost:3000/api';
+const SERVER_BASE_URL = process.env.VUE_APP_SERVER_URL || 'https://bar3-server.onrender.com';
+const API_BASE_URL = `${SERVER_BASE_URL}/api`;
 
 interface AccountData {
   apiKey: string;
@@ -18,7 +19,10 @@ export const accountApi = {
     return response.data;
   },
 
-  async updateMessage(apiKey: string, message: string): Promise<{ success: boolean; customMessage: string }> {
+  async updateMessage(
+    apiKey: string,
+    message: string
+  ): Promise<{ success: boolean; customMessage: string }> {
     const response = await axios.post(
       `${API_BASE_URL}/account/message`,
       { message },
