@@ -1,13 +1,13 @@
 <template>
   <v-btn
-    :color="enabled ? 'green' : 'red'"
+    :color="!isLoggedIn ? 'grey' : (enabled ? 'green' : 'red')"
     depressed
     small
-    :disabled="loading || !isLoggedIn"
+    :disabled="loading"
     @click="toggle()"
   >
     <v-icon left>mdi-power</v-icon>
-    {{ enabled ? 'Turn Bar3 Off' : 'Turn Bar3 On' }}
+    {{ !isLoggedIn ? 'Login to enable Bar3' : (enabled ? 'Turn Bar3 Off' : 'Turn Bar3 On') }}
   </v-btn>
 </template>
 
@@ -40,7 +40,10 @@ export default class V2AutomationToggle extends Vue {
   }
 
   async toggle() {
-    if (!this.isLoggedIn) return;
+    if (!this.isLoggedIn) {
+      if (this.$route.path !== '/account') this.$router.push({ path: '/account' });
+      return;
+    }
     const next = !this.enabled;
     this.$store.commit('setApplicationState', next); // optimistic
     try {

@@ -153,19 +153,21 @@
         this.saveChangesOpen = false;
       }
 
-      // v2 per-user template save (if logged in)
+      // v2 per-user template save (MongoDB). This is what automation uses.
       const token = localStorage.getItem('pwSessionToken') || '';
-      if (token) {
-        try {
-          await v2Api.upsertTemplate({
-            subject: this.subject,
-            bodyHtml: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
-            bodyText: undefined,
-          });
-        } catch {
-          // keep legacy save result; v2 save is best-effort for now
-        }
+      if (!token) {
+        alert('To save your auto-message to MongoDB, go to Account and log in first.');
+        return;
       }
+
+      await v2Api.upsertTemplate({
+        subject: this.subject,
+        bodyHtml: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
+        bodyText: undefined,
+      }).catch((e) => {
+        console.error(e);
+        alert('Saved locally, but failed to save to MongoDB. Please try again.');
+      });
     }
 
     async testMessage(nationDetails: {nationName: string; nationID: string; leaderName: string}) {
