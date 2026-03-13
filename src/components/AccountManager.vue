@@ -14,9 +14,10 @@
         v-model="apiKey"
         type="password"
         placeholder="Enter your API key"
-        @keyup.enter="loadAccount"
+        @keyup.enter="loginV2"
       />
-      <button @click="loadAccount" :disabled="!apiKey">Load Account</button>
+      <button @click="loginV2" :disabled="!apiKey">Login (per-user)</button>
+      <button class="ml-2" @click="loadAccount" :disabled="!apiKey">Legacy Load</button>
     </div>
 
     <div v-if="account" class="account-info">
@@ -41,6 +42,13 @@
       <button @click="saveMessage" :disabled="!customMessage">Save Message</button>
     </div>
 
+    <div v-if="v2Session" class="account-info">
+      <div class="info-field">
+        <label>Session:</label>
+        <span>Logged in</span>
+      </div>
+    </div>
+
     <div v-if="statusMessage" :class="['status', statusMessage.type]">
       {{ statusMessage.text }}
     </div>
@@ -54,6 +62,7 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { accountApi } from '../utilities/AccountAPI';
+import { v2Api } from '../utilities/v2Api';
 
 interface AccountData {
   apiKey: string;
@@ -68,6 +77,7 @@ export default class AccountManager extends Vue {
   account: AccountData | null = null;
   error = '';
   statusMessage: { type: string; text: string } | null = null;
+  v2Session = localStorage.getItem('pwSessionToken') || '';
 
   private getStatusCode(err: unknown): number | undefined {
     if (typeof err === 'object' && err !== null && 'response' in err) {
@@ -102,6 +112,22 @@ export default class AccountManager extends Vue {
     }
   }
 
+  async loginV2() {
+    this.error = '';
+    this.statusMessage = null;
+    try {
+      const res = await v2Api.loginWithPwApiKey(this.apiKey);
+      localStorage.setItem('pwSessionToken', res.token);
+      localStorage.setItem('pwAccountId', res.accountId);
+      localStorage.setItem('apiKey', this.apiKey); // keep for legacy features until fully migrated
+      this.v2Session = res.token;
+      this.statusMessage = { type: 'success', text: 'Logged in (per-user) successfully' };
+    } catch (e: any) {
+      this.error = e?.message || 'Login failed';
+      this.v2Session = '';
+    }
+  }
+
   async saveMessage() {
     this.error = '';
     this.statusMessage = null;
@@ -123,6 +149,7 @@ export default class AccountManager extends Vue {
 
   mounted() {
     if (this.apiKey) {
+      // Don’t auto-login; keep current behavior predictable.
       this.loadAccount();
     }
   }

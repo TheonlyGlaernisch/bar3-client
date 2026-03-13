@@ -1,5 +1,24 @@
 <template>
   <div class="view-small-inner-wrapper view-padding-inner-wrapper fill-height mb-10">
+    <v-card outlined class="mb-6" v-if="v2LoggedIn">
+      <v-card-title>Per-user Analytics</v-card-title>
+      <v-card-text>
+        <div class="mb-2">
+          Views: <strong>{{ v2ViewsTotal }}</strong>
+        </div>
+        <div class="mb-2">
+          Link Clicks: <strong>{{ v2ClicksTotal }}</strong>
+        </div>
+        <div v-if="v2AnalyticsLoaded" class="mt-4">
+          <h4>Top Links</h4>
+          <div v-for="l in v2Analytics.links.slice(0, 10)" :key="l.shortId" class="d-flex justify-space-between">
+            <span style="max-width: 75%; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">{{ l.url }}</span>
+            <span>{{ l.clickCount }}</span>
+          </div>
+        </div>
+      </v-card-text>
+    </v-card>
+
     <div v-if="enabled">
       <v-row>
         <v-col cols="12" md="8">
@@ -99,6 +118,7 @@ import CreateCampaignDialog from '@/components/CreateAnalyticsCampaignDialog.vue
 import getCampaigns from '@/actions/getAnalyticalCampaigns';
 import getConfig from '@/actions/getConfig';
 import { AnalyticalCampaign } from '@/interfaces/analytics';
+import { v2Api } from '@/utilities/v2Api';
 
 @Component({
   components: {
@@ -112,6 +132,17 @@ export default class AnalyticsManager extends Vue {
   enabled = false
   selectedCampaign: AnalyticalCampaign | null = null;
   createCampaignDialog = false;
+  v2LoggedIn = !!localStorage.getItem('pwSessionToken');
+  v2AnalyticsLoaded = false;
+  v2Analytics: any = { links: [], messages: [] };
+
+  get v2ViewsTotal(): number {
+    return (this.v2Analytics?.messages || []).reduce((sum: number, m: any) => sum + (m.viewCount || 0), 0);
+  }
+
+  get v2ClicksTotal(): number {
+    return (this.v2Analytics?.links || []).reduce((sum: number, l: any) => sum + (l.clickCount || 0), 0);
+  }
 
   get campaigns() {
     return this.$store.getters['analytics/campaigns'];
@@ -141,6 +172,14 @@ export default class AnalyticsManager extends Vue {
   }
 
   async mounted() {
+    if (this.v2LoggedIn) {
+      try {
+        this.v2Analytics = await v2Api.getMyAnalytics();
+      } finally {
+        this.v2AnalyticsLoaded = true;
+      }
+    }
+
     const config = await getConfig();
 
     if (config && !(config instanceof Error) && config.analyticsEnabled) {

@@ -72,6 +72,7 @@
   import TestMessageDialog from '@/components/TestMessageDialog.vue';
   import sendMessage from '@/actions/sendMessage';
   import UpdateAvailableBanner from '@/components/UpdateAvailableBanner.vue';
+  import { v2Api } from '@/utilities/v2Api';
   
   @Component({
     components: {
@@ -150,6 +151,20 @@
         alert('Couldn\'t update config! Please try again and verify the server is running.');
       } else {
         this.saveChangesOpen = false;
+      }
+
+      // v2 per-user template save (if logged in)
+      const token = localStorage.getItem('pwSessionToken') || '';
+      if (token) {
+        try {
+          await v2Api.upsertTemplate({
+            subject: this.subject,
+            bodyHtml: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
+            bodyText: undefined,
+          });
+        } catch {
+          // keep legacy save result; v2 save is best-effort for now
+        }
       }
     }
 
