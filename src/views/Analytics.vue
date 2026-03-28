@@ -132,7 +132,9 @@ export default class AnalyticsManager extends Vue {
   enabled = false
   selectedCampaign: AnalyticalCampaign | null = null;
   createCampaignDialog = false;
-  v2LoggedIn = !!localStorage.getItem('pwSessionToken');
+  get v2LoggedIn() {
+  return this.$store.getters.isLoggedIn;
+  }
   v2AnalyticsLoaded = false;
   v2Analytics: any = { links: [], messages: [] };
 
