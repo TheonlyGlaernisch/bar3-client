@@ -75,6 +75,7 @@ export default class AccountManager extends Vue {
     localStorage.removeItem('pwSessionToken');
     localStorage.removeItem('pwAccountId');
     this.v2Session = '';
+    this.$store.commit('setLoggedIn', false);
     this.$store.commit('setApplicationState', false);
     this.statusMessage = { type: 'success', text: 'Logged out' };
   }
