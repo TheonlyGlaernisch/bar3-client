@@ -21,9 +21,8 @@ export default class V2AutomationToggle extends Vue {
   loading = false;
 
   get isLoggedIn(): boolean {
-    return !!localStorage.getItem('pwSessionToken');
+  return this.$store.getters.isLoggedIn;
   }
-
   get enabled(): boolean {
     return this.$store.getters.applicationOn;
   }
