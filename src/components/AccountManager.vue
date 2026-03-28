@@ -57,6 +57,7 @@ export default class AccountManager extends Vue {
       localStorage.setItem('pwAccountId', res.accountId);
       localStorage.setItem('apiKey', this.apiKey);
       this.v2Session = res.token;
+      this.$store.commit('setLoggedIn', true);
       this.statusMessage = { type: 'success', text: 'User loaded successfully' };
 
       // Immediately sync the top-right toggle state after login.
