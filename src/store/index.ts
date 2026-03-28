@@ -20,6 +20,8 @@ export default new Vuex.Store({
       max: 0,
     },
     newUpdate: null as null | GitHubRelease,
+    isLoggedIn: !!localStorage.getItem('pwSessionToken'),
+},
   },
   getters: {
     applicationOn(state) {
@@ -29,6 +31,7 @@ export default new Vuex.Store({
     serverIP(state) {
       return state.serverIP;
     },
+    isLoggedIn: (state) => state.isLoggedIn,
 
     sentMessages(state) {
       return state.sentMessages;
@@ -109,6 +112,9 @@ export default new Vuex.Store({
   mutations: {
     setApplicationState(state, isOn) {
       state.isApplicationOn = isOn;
+    },
+    setLoggedIn(state, isLoggedIn) {
+    state.isLoggedIn = isLoggedIn;
     },
 
     setSentMessages(state, sentMessagesRefresh) {
