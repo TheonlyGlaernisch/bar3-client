@@ -132,49 +132,50 @@
       this.saveChangesOpen = false;
     }
 
-    async save() {
-      if (!this.$store.getters.isLoggedIn) {
-  alert('You must log in (Account tab) before saving to the cloud.');
-  return;
-      }
-      const token = localStorage.getItem('pwSessionToken');
-      const newConfig = {
-        messageSubject: this.subject,
-        messageHTML: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
-        advancedRaw: {
-          html: this.advancedRaw.html,
-          css: this.advancedRaw.css,
-        },
-        currentEditor: this.editorTab,
-      };
+async save() {
+  if (!this.$store.getters.isLoggedIn) {
+    alert('You must log in (Account tab) before saving to the cloud.');
+    return;
+  }
 
-      const res = await sendConfig(newConfig);
-      Object.assign(this.config, newConfig);
+  // Only declare 'token' ONCE!
+  const token = localStorage.getItem('pwSessionToken') || '';
 
-      if (!res) {
-        this.error = true;
-        alert('Couldn\'t update config! Please try again and verify the server is running.');
-      } else {
-        this.saveChangesOpen = false;
-      }
+  const newConfig = {
+    messageSubject: this.subject,
+    messageHTML: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
+    advancedRaw: {
+      html: this.advancedRaw.html,
+      css: this.advancedRaw.css,
+    },
+    currentEditor: this.editorTab,
+  };
 
-      // v2 per-user template save (MongoDB). This is what automation uses.
-      const token = localStorage.getItem('pwSessionToken') || '';
-      if (!token) {
-        alert('To save your auto-message to MongoDB, go to Account and log in first.');
-        return;
-      }
+  const res = await sendConfig(newConfig);
+  Object.assign(this.config, newConfig);
 
-      await v2Api.upsertTemplate({
-        subject: this.subject,
-        bodyHtml: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
-        bodyText: undefined,
-      }).catch((e) => {
-        console.error(e);
-        alert('Saved locally, but failed to save to MongoDB. Please try again.');
-      });
-    }
+  if (!res) {
+    this.error = true;
+    alert('Couldn\'t update config! Please try again and verify the server is running.');
+  } else {
+    this.saveChangesOpen = false;
+  }
 
+  // v2 per-user template save (MongoDB). This is what automation uses.
+  if (!token) {
+    alert('To save your auto-message to MongoDB, go to Account and log in first.');
+    return;
+  }
+
+  await v2Api.upsertTemplate({
+    subject: this.subject,
+    bodyHtml: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
+    bodyText: undefined,
+  }).catch((e) => {
+    console.error(e);
+    alert('Saved locally, but failed to save to MongoDB. Please try again.');
+  });
+}
     async testMessage(nationDetails: {nationName: string; nationID: string; leaderName: string}) {
       const success = await sendMessage((this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced, nationDetails); 
       if (!success) alert('Couldn\'t send your message!');
