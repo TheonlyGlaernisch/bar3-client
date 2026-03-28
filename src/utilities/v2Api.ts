@@ -42,22 +42,18 @@ export const v2Api = {
   },
 
   async upsertTemplate(payload: { subject: string; bodyText?: string; bodyHtml?: string }): Promise<void> {
-    // For simplicity: create a new template if none exists, otherwise update the newest.
-    const list = await v2Fetch('/api/v2/templates').then(async r => {
-      if (r.status !== 200) throw new Error('Failed to load templates');
-      return r.json();
-    });
-
-    const latest = Array.isArray(list) && list.length ? list[0] : null;
-    if (!latest?.id) {
-      const res = await v2Fetch('/api/v2/templates', { method: 'POST' }, payload);
-      if (res.status !== 201) throw new Error('Failed to save template');
-      return;
+  try {
+    const res = await v2Fetch('/api/v2/templates', { method: 'POST' }, payload);
+    if (res.status !== 201 && res.status !== 200) {
+      const data = await res.json();
+      throw new Error(data?.error || `Failed to save (status: ${res.status})`);
     }
-
-    const res = await v2Fetch(`/api/v2/templates/${latest.id}`, { method: 'PUT' }, payload);
-    if (res.status !== 200) throw new Error('Failed to update template');
-  },
+    return res.json();
+  } catch (e) {
+    console.error('Failed to save template to backend:', e);
+    throw e;
+  }
+}
 
   async getMyAnalytics(): Promise<{
     links: { shortId: string; url: string; clickCount: number; lastClickedAt: string | null }[];
