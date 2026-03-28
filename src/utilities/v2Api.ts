@@ -42,17 +42,18 @@ export const v2Api = {
   },
 
   async upsertTemplate(payload: { subject: string; bodyText?: string; bodyHtml?: string }): Promise<void> {
-  try {
-    const res = await v2Fetch('/api/v2/templates', { method: 'POST' }, payload);
-    if (res.status !== 201 && res.status !== 200) {
-      const data = await res.json();
-      throw new Error(data?.error || `Failed to save (status: ${res.status})`);
-    }
-    return res.json();
-  } catch (e) {
-    console.error('Failed to save template to backend:', e);
-    throw e;
-  }
+    try {
+      const res = await v2Fetch('/api/v2/templates', { method: 'POST' }, payload);
+      if (res.status !== 201 && res.status !== 200) {
+        const data = await res.json();
+        throw new Error(data?.error || `Failed to save (status: ${res.status})`);
+      }
+      return res.json();
+    } catch (e) {
+      console.error('Failed to save template to backend:', e);
+      throw e;
+      }
+    },
 
   async getMyAnalytics(): Promise<{
     links: { shortId: string; url: string; clickCount: number; lastClickedAt: string | null }[];
@@ -63,4 +64,3 @@ export const v2Api = {
     return res.json();
   }
 };
-
