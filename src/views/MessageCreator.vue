@@ -141,14 +141,15 @@ async save() {
   // Only declare 'token' ONCE!
   const token = localStorage.getItem('pwSessionToken') || '';
 
-  const newConfig = {
+  const configToSave = {
+    ...this.config,
     messageSubject: this.subject,
-    messageHTML: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
+    messageHTML: this.editorTab == 0 ? this.messageHTML.quill : this.messageHTML.advanced,
     advancedRaw: {
       html: this.advancedRaw.html,
       css: this.advancedRaw.css,
     },
-    currentEditor: this.editorTab,
+    currentEditor: this.editorTab
   };
 
   const res = await sendConfig(newConfig);
