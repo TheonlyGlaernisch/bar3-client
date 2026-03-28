@@ -20,9 +20,9 @@ export default new Vuex.Store({
       max: 0,
     },
     newUpdate: null as null | GitHubRelease,
-    isLoggedIn: !!localStorage.getItem('pwSessionToken'),
-},
+    isLoggedIn: !!localStorage.getItem('pwSessionToken')
   },
+},
   getters: {
     applicationOn(state) {
       return state.isApplicationOn;
