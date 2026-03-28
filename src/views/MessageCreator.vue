@@ -133,6 +133,11 @@
     }
 
     async save() {
+      if (!this.$store.getters.isLoggedIn) {
+  alert('You must log in (Account tab) before saving to the cloud.');
+  return;
+      }
+      const token = localStorage.getItem('pwSessionToken');
       const newConfig = {
         messageSubject: this.subject,
         messageHTML: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
