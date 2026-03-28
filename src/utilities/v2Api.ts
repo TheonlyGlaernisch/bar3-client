@@ -59,7 +59,7 @@ export const v2Api = {
     links: { shortId: string; url: string; clickCount: number; lastClickedAt: string | null }[];
     messages: { messageId: string; viewCount: number; lastViewedAt: string | null }[];
   }> {
-    const res = await v2Fetch('/analytics/v2/me');
+    const res = await v2Fetch('/api/v2/analytics/me');
     if (res.status !== 200) throw new Error('Failed to load analytics');
     return res.json();
   }
