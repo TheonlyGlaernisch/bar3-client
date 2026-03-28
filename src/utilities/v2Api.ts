@@ -53,7 +53,6 @@ export const v2Api = {
     console.error('Failed to save template to backend:', e);
     throw e;
   }
-}
 
   async getMyAnalytics(): Promise<{
     links: { shortId: string; url: string; clickCount: number; lastClickedAt: string | null }[];
@@ -62,6 +61,6 @@ export const v2Api = {
     const res = await v2Fetch('/analytics/v2/me');
     if (res.status !== 200) throw new Error('Failed to load analytics');
     return res.json();
-  },
+  }
 };
 
