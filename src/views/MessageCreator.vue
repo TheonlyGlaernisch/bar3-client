@@ -133,10 +133,16 @@
     }
 
 async save() {
-  if (!this.$store.getters.isLoggedIn) {
-    alert('You must log in (Account tab) before saving to the cloud.');
-    return;
-  }
+  const configToSave = {
+    ...this.config,
+    messageSubject: this.subject,
+    messageHTML: this.editorTab == 0 ? this.messageHTML.quill : this.messageHTML.advanced,
+    advancedRaw: {
+      html: this.advancedRaw.html,
+      css: this.advancedRaw.css,
+    },
+    currentEditor: this.editorTab,
+  };
 
   // Only declare 'token' ONCE!
   const token = localStorage.getItem('pwSessionToken') || '';
@@ -152,9 +158,15 @@ async save() {
     currentEditor: this.editorTab
   };
 
-  const res = await sendConfig(newConfig);
-  Object.assign(this.config, newConfig);
-
+   const res = await sendConfig(configToSave); // <--- use configToSave here instead of newConfig
+  if (!res) {
+    this.error = true;
+    alert("Couldn't update config!");
+  } else {
+    this.saveChangesOpen = false;
+    this.config = configToSave; // keep in sync
+  }
+}
   if (!res) {
     this.error = true;
     alert('Couldn\'t update config! Please try again and verify the server is running.');
