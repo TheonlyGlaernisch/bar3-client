@@ -144,19 +144,16 @@ async save() {
     currentEditor: this.editorTab,
   };
 
-  // Only declare 'token' ONCE!
   const token = localStorage.getItem('pwSessionToken') || '';
 
-   const res = await sendConfig(configToSave); // <--- use configToSave here instead of newConfig
+  const res = await sendConfig(configToSave);
   if (!res) {
     this.error = true;
-    alert("Couldn't update config!");
+    alert("Couldn't update config! Please try again and verify the server is running.");
   } else {
     this.saveChangesOpen = false;
     this.config = configToSave; // keep in sync
   }
-}
- 
 
   // v2 per-user template save (MongoDB). This is what automation uses.
   if (!token) {
