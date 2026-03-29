@@ -156,12 +156,7 @@ async save() {
     this.config = configToSave; // keep in sync
   }
 }
-  if (!res) {
-    this.error = true;
-    alert('Couldn\'t update config! Please try again and verify the server is running.');
-  } else {
-    this.saveChangesOpen = false;
-  }
+ 
 
   // v2 per-user template save (MongoDB). This is what automation uses.
   if (!token) {
