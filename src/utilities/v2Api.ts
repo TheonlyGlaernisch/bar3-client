@@ -6,6 +6,15 @@ type JsonValue = Record<string, unknown> | unknown[] | string | number | boolean
 function getToken(): string {
   return localStorage.getItem('pwSessionToken') || '';
 }
+export interface MessageTemplateData {
+  subject: string;
+  bodyHtml: string;
+  bodyCss?: string;   // <-- Add this line!
+  bodyText?: string;
+  id?: string;        // (add id if you use it elsewhere)
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 async function v2Fetch(path: string, init: RequestInit = {}, body?: JsonValue) {
   const headers: Record<string, string> = {
