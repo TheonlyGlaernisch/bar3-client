@@ -22,7 +22,6 @@ export default new Vuex.Store({
     newUpdate: null as null | GitHubRelease,
     isLoggedIn: !!localStorage.getItem('pwSessionToken')
   },
-  
   getters: {
     applicationOn(state) {
       return state.isApplicationOn;
