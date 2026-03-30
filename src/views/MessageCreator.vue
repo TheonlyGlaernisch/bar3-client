@@ -161,21 +161,17 @@ async save() {
     return;
   }
 
+  // -- Save exactly the entered html/css --
   await v2Api.upsertTemplate({
-  subject: this.subject,
-  bodyHtml: (this.editorTab == 0) ? this.messageHTML.quill : this.advancedRaw.html,
-  bodyCss: this.advancedRaw.css,      // <-- Add this line
-  bodyText: undefined,
-});catch((e) => {
+    subject: this.subject,
+    bodyHtml: this.editorTab == 0 ? this.messageHTML.quill : this.advancedRaw.html,
+    bodyCss: this.advancedRaw.css,
+    bodyText: undefined,
+  }).catch((e) => {
     console.error(e);
     alert('Saved locally, but failed to save to MongoDB. Please try again.');
   });
 }
-    async testMessage(nationDetails: {nationName: string; nationID: string; leaderName: string}) {
-      const success = await sendMessage((this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced, nationDetails); 
-      if (!success) alert('Couldn\'t send your message!');
-    }
-  }
 </script>
 
 <style>
