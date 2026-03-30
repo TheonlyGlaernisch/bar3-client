@@ -99,88 +99,93 @@
     error = false;
     testDialog = false;
 
-async mounted() {
-  const config = await getConfig();
-  if (config && !(config instanceof Error)) {
-    this.advancedRaw.html = (config.advancedRaw && config.advancedRaw.html) || '';
-    this.advancedRaw.css = (config.advancedRaw && config.advancedRaw.css) || '';
-    this.messageHTML.quill = config.messageHTML || '';
-    this.subject = config.messageSubject || '';
-    this.config = config;
-    this.editorTab = config.currentEditor || 0;
-    this.changes();
-  } else {
-    alert('Couldn\'t retrieve your config!');
+    async mounted() {
+      const config = await getConfig();
+      if (config && !(config instanceof Error)) {
+        this.advancedRaw.html = (config.advancedRaw && config.advancedRaw.html) || '';
+        this.advancedRaw.css = (config.advancedRaw && config.advancedRaw.css) || '';
+        this.messageHTML.quill = config.messageHTML || '';
+        this.subject = config.messageSubject || '';
+        this.config = config;
+        this.editorTab = config.currentEditor || 0;
+        this.changes();
+      } else {
+        alert('Couldn\'t retrieve your config!');
+      }
+    }
+
+    changes() {
+      if (this.editorTab == 0 && this.messageHTML.quill != this.config.messageHTML) {
+        this.saveChangesOpen = true;
+        return;
+      } else if (this.editorTab == 1 && (
+        this.advancedRaw.html != (this.config.advancedRaw && this.config.advancedRaw.html) ||
+        this.advancedRaw.css != (this.config.advancedRaw && this.config.advancedRaw.css)
+      )) {
+        this.saveChangesOpen = true;
+        return;
+      } else if (this.subject != this.config.messageSubject) {
+        this.saveChangesOpen = true;
+        return;
+      } else if (this.editorTab != this.config.currentEditor) {
+        this.saveChangesOpen = true;
+        return;
+      }
+
+      this.saveChangesOpen = false;
+    }
+
+    async save() {
+      if (!this.$store.getters.isLoggedIn) {
+        alert('You must log in (Account tab) before saving to the cloud.');
+        return;
+      }
+
+      const token = localStorage.getItem('pwSessionToken') || '';
+
+      const newConfig = {
+        messageSubject: this.subject,
+        messageHTML: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
+        advancedRaw: {
+          html: this.advancedRaw.html,
+          css: this.advancedRaw.css,
+        },
+        currentEditor: this.editorTab,
+      };
+
+      const res = await sendConfig(newConfig);
+      Object.assign(this.config, newConfig);
+
+      if (!res) {
+        this.error = true;
+        alert('Couldn\'t update config! Please try again and verify the server is running.');
+      } else {
+        this.saveChangesOpen = false;
+      }
+
+      // v2 per-user template save (MongoDB). This is what automation uses.
+      if (!token) {
+        alert('To save your auto-message to MongoDB, go to Account and log in first.');
+        return;
+      }
+
+      try {
+        await v2Api.upsertTemplate({
+          subject: this.subject,
+          bodyHtml: (this.editorTab == 0) ? this.messageHTML.quill : this.advancedRaw.html,
+          bodyCss: (this.editorTab == 0) ? undefined : this.advancedRaw.css,
+          bodyText: undefined,
+        });
+      } catch (e) {
+        console.error(e);
+        alert('Saved locally, but failed to save to MongoDB. Please try again.');
+      }
+    }
+    async testMessage(nationDetails: {nationName: string; nationID: string; leaderName: string}) {
+      const success = await sendMessage((this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced, nationDetails); 
+      if (!success) alert('Couldn\'t send your message!');
+    }
   }
-}
-
-changes() {
-  if (this.editorTab == 0 && this.messageHTML.quill != this.config.messageHTML) {
-    this.saveChangesOpen = true;
-    return;
-  } else if (this.editorTab == 1 && (
-    this.advancedRaw.html != (this.config.advancedRaw && this.config.advancedRaw.html) ||
-    this.advancedRaw.css != (this.config.advancedRaw && this.config.advancedRaw.css)
-  )) {
-    this.saveChangesOpen = true;
-    return;
-  } else if (this.subject != this.config.messageSubject) {
-    this.saveChangesOpen = true;
-    return;
-  } else if (this.editorTab != this.config.currentEditor) {
-    this.saveChangesOpen = true;
-    return;
-  }
-
-  this.saveChangesOpen = false;
-}
-
-async save() {
-  if (!this.$store.getters.isLoggedIn) {
-    alert('You must log in (Account tab) before saving to the cloud.');
-    return;
-  }
-
-  const token = localStorage.getItem('pwSessionToken') || '';
-
-  const newConfig = {
-    messageSubject: this.subject,
-    messageHTML: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
-    advancedRaw: {
-      html: this.advancedRaw.html,
-      css: this.advancedRaw.css,
-    },
-    currentEditor: this.editorTab,
-  };
-
-    const res = await sendConfig(newConfig);
-    Object.assign(this.config, newConfig);
-  
-  if (!res) {
-    this.error = true;
-    alert('Couldn\'t update config! Please try again and verify the server is running.');
-  } else {
-    this.saveChangesOpen = false;
-  }
-
-  // v2 per-user template save (MongoDB). This is what automation uses.
-  if (!token) {
-    alert('To save your auto-message to MongoDB, go to Account and log in first.');
-    return;
-  }
-
-  try {
-    await v2Api.upsertTemplate({
-      subject: this.subject,
-      bodyHtml: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
-      bodyText: undefined,
-    });
-  } catch (e) {
-    console.error(e);
-    alert('Saved locally, but failed to save to MongoDB. Please try again.');
-  }
-}
-}
 </script>
 
 <style>
