@@ -41,7 +41,7 @@ export const v2Api = {
     if (res.status !== 204) throw new Error('Failed to update automation state');
   },
 
-  async upsertTemplate(payload: { subject: string; bodyText?: string; bodyHtml?: string }): Promise<void> {
+  async upsertTemplate(payload: { subject: string; bodyText?: string; bodyHtml?: string; bodyCss?: string }): Promise<void> {
     try {
       const res = await v2Fetch('/api/v2/templates', { method: 'POST' }, payload);
       if (res.status !== 201 && res.status !== 200) {
