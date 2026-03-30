@@ -133,10 +133,16 @@
     }
 
 async save() {
-  const configToSave = {
-    ...this.config,
+  if (!this.$store.getters.isLoggedIn) {
+    alert('You must log in (Account tab) before saving to the cloud.');
+    return;
+  }
+
+  const token = localStorage.getItem('pwSessionToken') || '';
+
+  const newConfig = {
     messageSubject: this.subject,
-    messageHTML: this.editorTab == 0 ? this.messageHTML.quill : this.messageHTML.advanced,
+    messageHTML: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
     advancedRaw: {
       html: this.advancedRaw.html,
       css: this.advancedRaw.css,
@@ -144,15 +150,14 @@ async save() {
     currentEditor: this.editorTab,
   };
 
-  const token = localStorage.getItem('pwSessionToken') || '';
+  const res = await sendConfig(newConfig);
+  Object.assign(this.config, newConfig);
 
-  const res = await sendConfig(configToSave);
   if (!res) {
     this.error = true;
-    alert("Couldn't update config! Please try again and verify the server is running.");
+    alert('Couldn\'t update config! Please try again and verify the server is running.');
   } else {
     this.saveChangesOpen = false;
-    this.config = configToSave; // keep in sync
   }
 
   // v2 per-user template save (MongoDB). This is what automation uses.
@@ -161,16 +166,16 @@ async save() {
     return;
   }
 
-  // -- Save exactly the entered html/css --
-  await v2Api.upsertTemplate({
-    subject: this.subject,
-    bodyHtml: this.editorTab == 0 ? this.messageHTML.quill : this.advancedRaw.html,
-    bodyCss: this.advancedRaw.css,
-    bodyText: undefined,
-  }).catch((e) => {
+  try {
+    await v2Api.upsertTemplate({
+      subject: this.subject,
+      bodyHtml: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
+      bodyText: undefined,
+    });
+  } catch (e) {
     console.error(e);
     alert('Saved locally, but failed to save to MongoDB. Please try again.');
-  });
+  }
 }
 </script>
 
