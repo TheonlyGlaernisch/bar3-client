@@ -6,6 +6,7 @@ Vue.use(Vuex)
 
 import analytics from './modules/analytics';
 
+
 export default new Vuex.Store({
   state: {
     isApplicationOn: false,
