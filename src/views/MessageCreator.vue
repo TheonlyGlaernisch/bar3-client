@@ -175,6 +175,7 @@
           bodyHtml: (this.editorTab == 0) ? this.messageHTML.quill : this.advancedRaw.html,
           bodyCss: (this.editorTab == 0) ? undefined : this.advancedRaw.css,
           bodyText: undefined,
+          currentEditor: this.editorTab,
         });
       } catch (e) {
         console.error(e);
