@@ -71,11 +71,13 @@
     @Watch('inputHTML')
     onInputHTMLChanged(value: string) {
       this.html = value || '';
+      this.debouncedDigest();
     }
 
     @Watch('inputCSS')
     onInputCSSChanged(value: string) {
       this.css = value || '';
+      this.debouncedDigest();
     }
 
     highlighterHTML(code: string) {
