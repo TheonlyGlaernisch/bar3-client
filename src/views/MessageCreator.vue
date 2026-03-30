@@ -132,42 +132,6 @@
       this.saveChangesOpen = false;
     }
 
-async mounted() {
-  const config = await getConfig();
-  if (config && !(config instanceof Error)) {
-    this.advancedRaw.html = (config.advancedRaw && config.advancedRaw.html) || '';
-    this.advancedRaw.css = (config.advancedRaw && config.advancedRaw.css) || '';
-    this.messageHTML.quill = config.messageHTML || '';
-    this.subject = config.messageSubject || '';
-    this.config = config;
-    this.editorTab = config.currentEditor || 0;
-    this.changes();
-  } else {
-    alert('Couldn\'t retrieve your config!');
-  }
-}
-
-changes() {
-  if (this.editorTab == 0 && this.messageHTML.quill != this.config.messageHTML) {
-    this.saveChangesOpen = true;
-    return;
-  } else if (this.editorTab == 1 && (
-    this.advancedRaw.html != (this.config.advancedRaw && this.config.advancedRaw.html) ||
-    this.advancedRaw.css != (this.config.advancedRaw && this.config.advancedRaw.css)
-  )) {
-    this.saveChangesOpen = true;
-    return;
-  } else if (this.subject != this.config.messageSubject) {
-    this.saveChangesOpen = true;
-    return;
-  } else if (this.editorTab != this.config.currentEditor) {
-    this.saveChangesOpen = true;
-    return;
-  }
-
-  this.saveChangesOpen = false;
-}
-
 async save() {
   if (!this.$store.getters.isLoggedIn) {
     alert('You must log in (Account tab) before saving to the cloud.');
