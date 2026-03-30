@@ -6,15 +6,6 @@ type JsonValue = Record<string, unknown> | unknown[] | string | number | boolean
 function getToken(): string {
   return localStorage.getItem('pwSessionToken') || '';
 }
-export interface MessageTemplateData {
-  subject: string;
-  bodyHtml: string;
-  bodyCss?: string;   // <-- Add this line!
-  bodyText?: string;
-  id?: string;        // (add id if you use it elsewhere)
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 async function v2Fetch(path: string, init: RequestInit = {}, body?: JsonValue) {
   const headers: Record<string, string> = {
@@ -50,25 +41,25 @@ export const v2Api = {
     if (res.status !== 204) throw new Error('Failed to update automation state');
   },
 
-async upsertTemplate(payload: { subject: string; bodyText?: string; bodyHtml?: string }): Promise<void> {
-  try {
-    const res = await v2Fetch('/api/v2/templates', { method: 'POST' }, payload);
-    if (res.status !== 201 && res.status !== 200) {
-      const data = await res.json();
-      throw new Error(data?.error || `Failed to save (status: ${res.status})`);
+  async upsertTemplate(payload: { subject: string; bodyText?: string; bodyHtml?: string; bodyCss?: string }): Promise<void> {
+    try {
+      const res = await v2Fetch('/api/v2/templates', { method: 'POST' }, payload);
+      if (res.status !== 201 && res.status !== 200) {
+        const data = await res.json();
+        throw new Error(data?.error || `Failed to save (status: ${res.status})`);
+      }
+      return;
+    } catch (e) {
+      console.error('Failed to save template to backend:', e);
+      throw e;
     }
-    return;
-  } catch (e) {
-    console.error('Failed to save template to backend:', e);
-    throw e;
-  }
-},
+  },
 
   async getMyAnalytics(): Promise<{
     links: { shortId: string; url: string; clickCount: number; lastClickedAt: string | null }[];
     messages: { messageId: string; viewCount: number; lastViewedAt: string | null }[];
   }> {
-    const res = await v2Fetch('/api/v2/analytics/me');
+    const res = await v2Fetch('/analytics/v2/me');
     if (res.status !== 200) throw new Error('Failed to load analytics');
     return res.json();
   }
