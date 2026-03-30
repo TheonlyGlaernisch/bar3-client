@@ -102,8 +102,8 @@
     async mounted() {
       const config = await getConfig();
       if (config && !(config instanceof Error)) {
-        this.advancedRaw.html = config?.advancedRaw?.html || '';
-        this.advancedRaw.css = config?.advancedRaw?.css || '';
+        this.advancedRaw.html = template.bodyHtml || '';
+        this.advancedRaw.css = template.bodyCss || '';
         this.messageHTML.quill = config.messageHTML || '';
         this.subject = config.messageSubject || '';
         this.config = config;
