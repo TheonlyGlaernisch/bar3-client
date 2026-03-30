@@ -153,9 +153,9 @@ async save() {
     currentEditor: this.editorTab,
   };
 
-  const res = await sendConfig(newConfig);
-  Object.assign(this.config, newConfig);
-
+    const res = await sendConfig(newConfig);
+    Object.assign(this.config, newConfig);
+  
   if (!res) {
     this.error = true;
     alert('Couldn\'t update config! Please try again and verify the server is running.');
@@ -179,6 +179,7 @@ async save() {
     console.error(e);
     alert('Saved locally, but failed to save to MongoDB. Please try again.');
   }
+}
 }
 </script>
 
