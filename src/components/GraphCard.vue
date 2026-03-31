@@ -26,6 +26,9 @@
         <h2>
           {{ APIRequests.used }} / {{ APIRequests.max }}
         </h2>
+        <div v-if="APIRequests.remaining > 0" class="text--secondary mt-1">
+          Remaining this window: {{ APIRequests.remaining }}
+        </div>
       </v-card-text>
       <div
         class="pa-4 d-flex"
@@ -64,7 +67,7 @@
       return this.$store.getters.sentMessages;
     }
 
-    get APIRequests(): {max: number; used: number} {
+    get APIRequests(): {max: number; used: number; remaining: number} {
       return this.$store.getters.apiDetails;
     }
 
