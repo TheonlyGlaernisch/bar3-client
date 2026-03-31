@@ -21,7 +21,7 @@ export async function getPwApiKeyDetails(apiKey: string): Promise<PwApiKeyDetail
     const query = '{ me { requests max_requests } }';
     const url = `${PW_GRAPHQL_URL}?api_key=${encodeURIComponent(apiKey)}&query=${encodeURIComponent(query)}`;
 
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!res.ok) return { used: 0, max: 0 };
 
     const data = await res.json();

@@ -30,6 +30,7 @@ import GraphCard from '@/components/GraphCard.vue';
 import MessagesSentCard from '@/components/MessagesSentCard.vue';
 import UpdateAvailableBanner from '@/components/UpdateAvailableBanner.vue';
 import getAppData from '@/actions/getAppData';
+import { getPwApiKeyDetails } from '@/utilities/pwApi';
 
 @Component({
   components: {
@@ -55,10 +56,20 @@ export default class Home extends Vue {
   async fetchApiDetails() {
     const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) return;
+
+    // Fetch sent messages and app state from the server.
     const data = await getAppData();
     if (data) {
-      this.$store.commit('setAPIDetails', { used: data.apiDetails.used, max: data.apiDetails.max });
       this.$store.commit('setSentMessages', data.sentMessages);
+    }
+
+    // Always query P&W directly with the stored API key so the dashboard
+    // shows accurate usage regardless of what the server reports.
+    const details = await getPwApiKeyDetails(apiKey).catch(() => ({ used: 0, max: 0 }));
+    if (details.max > 0) {
+      this.$store.commit('setAPIDetails', details);
+    } else if (data && data.apiDetails.max > 0) {
+      this.$store.commit('setAPIDetails', data.apiDetails);
     }
   }
 
