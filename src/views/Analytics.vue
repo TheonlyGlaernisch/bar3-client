@@ -1,28 +1,55 @@
 <template>
   <div class="view-small-inner-wrapper view-padding-inner-wrapper fill-height mb-10">
-    <v-card outlined class="mb-6" v-if="v2LoggedIn">
-      <v-card-title>Per-user Analytics</v-card-title>
-      <v-card-text>
-        <div class="mb-2">
-          Views: <strong>{{ v2ViewsTotal }}</strong>
-        </div>
-        <div class="mb-2">
-          Link Clicks: <strong>{{ v2ClicksTotal }}</strong>
-        </div>
-        <div v-if="v2AnalyticsLoaded" class="mt-4">
-          <h4>Top Links</h4>
-          <div v-for="l in v2Analytics.links.slice(0, 10)" :key="l.shortId" class="d-flex justify-space-between">
-            <span style="max-width: 75%; overflow:hidden; text-overflow: ellipsis; white-space: nowrap;">{{ l.url }}</span>
-            <span>{{ l.clickCount }}</span>
-          </div>
-        </div>
-      </v-card-text>
-    </v-card>
 
-    <div v-if="enabled">
+    <!-- V2 Analytics Graph Section -->
+    <div v-if="v2LoggedIn && v2AnalyticsLoaded">
+      <v-row>
+        <v-col cols="12">
+          <h1>Analytics</h1>
+        </v-col>
+      </v-row>
+      <div class="mb-4 mt-4">
+        <analytics-graph-card :campaign="v2Campaign" class="mt-4"/>
+      </div>
+      <v-row>
+        <v-col cols="12" md="4">
+          <v-card outlined height="250px">
+            <v-card-title>Views</v-card-title>
+            <v-card-text>
+              <h4>Total Message Views</h4>
+              <h2>{{ v2ViewsTotal }}</h2>
+            </v-card-text>
+          </v-card>
+        </v-col>
+        <v-col cols="12" md="8">
+          <v-card height="250px" outlined>
+            <v-card-title>Links</v-card-title>
+            <v-divider/>
+            <v-list dense class="scrolling-list">
+              <div v-for="l in v2Analytics.links" :key="l.shortId">
+                <v-list-item>
+                  <v-list-item-icon><v-icon>mdi-link-variant</v-icon></v-list-item-icon>
+                  <v-list-item-content>
+                    <v-list-item-title>{{ linkName(l.url) }}</v-list-item-title>
+                    <v-list-item-subtitle>{{ l.clickCount }} Clicks</v-list-item-subtitle>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-divider/>
+              </div>
+              <div v-if="v2Analytics.links.length === 0" class="ml-4 pa-2 grey--text">
+                No tracked links yet.
+              </div>
+            </v-list>
+          </v-card>
+        </v-col>
+      </v-row>
+    </div>
+
+    <!-- Legacy campaign analytics section -->
+    <div v-if="enabled" class="mt-8">
       <v-row>
         <v-col cols="12" md="8">
-          <h1>Analytics Manager</h1>
+          <h2>Campaign Analytics</h2>
         </v-col>
         <v-col cols="12" md="4">
           <v-select
@@ -72,7 +99,7 @@
       <create-campaign-dialog v-model="createCampaignDialog" @created="createdNewCampaign()"/>
     </div>
 
-    <v-container class="fill-height" fluid v-else-if="loaded">
+    <v-container class="fill-height" fluid v-else-if="loaded && !v2LoggedIn">
       <v-row class="text-center mt-n16">
         <v-col class="ma-auto" style="max-width: fit-content" xs="10" md="7">
           <h2>
@@ -87,7 +114,7 @@
       </v-row>
     </v-container>
 
-    <div v-if="!loaded">
+    <div v-if="!loaded && !v2AnalyticsLoaded">
       <v-skeleton-loader
         class="mx-auto"
         type="image"
@@ -146,6 +173,64 @@ export default class AnalyticsManager extends Vue {
     return (this.v2Analytics?.links || []).reduce((sum: number, l: any) => sum + (l.clickCount || 0), 0);
   }
 
+  /** Build a synthetic AnalyticalCampaign from v2 data for the graph card. */
+  get v2Campaign(): AnalyticalCampaign {
+    const links = (this.v2Analytics?.links || []) as any[];
+    const messages = (this.v2Analytics?.messages || []) as any[];
+
+    // Collect all view timestamps across messages (full history if server returns it,
+    // otherwise fall back to lastViewedAt as a single-point proxy).
+    const allViewTimes: number[] = [];
+    for (const m of messages) {
+      if (Array.isArray(m.viewHistory) && m.viewHistory.length) {
+        for (const t of m.viewHistory) allViewTimes.push(new Date(t).getTime());
+      } else if (m.lastViewedAt) {
+        allViewTimes.push(new Date(m.lastViewedAt).getTime());
+      }
+    }
+    allViewTimes.sort((a, b) => a - b);
+
+    const mappedLinks = links.map((l: any) => {
+      const clickTimes: number[] = [];
+      if (Array.isArray(l.clickHistory) && l.clickHistory.length) {
+        for (const t of l.clickHistory) clickTimes.push(new Date(t).getTime());
+      } else if (l.lastClickedAt) {
+        clickTimes.push(new Date(l.lastClickedAt).getTime());
+      }
+      clickTimes.sort((a, b) => a - b);
+      return {
+        url: l.url,
+        id: l.shortId,
+        auth: '',
+        readCount: l.clickCount || 0,
+        readHistory: clickTimes,
+      };
+    });
+
+    return {
+      _id: 'v2',
+      name: 'Message Analytics',
+      sentCount: 0,
+      createdTime: allViewTimes[0] || Date.now(),
+      links: mappedLinks,
+      messagePixel: {
+        id: 'v2',
+        auth: '',
+        readCount: this.v2ViewsTotal,
+        readHistory: allViewTimes,
+      },
+    };
+  }
+
+  linkName(urlString: string): string {
+    try {
+      const url = new URL(urlString);
+      return url.hostname + url.pathname;
+    } catch {
+      return urlString;
+    }
+  }
+
   get campaigns() {
     return this.$store.getters['analytics/campaigns'];
   }
@@ -192,3 +277,4 @@ export default class AnalyticsManager extends Vue {
   }
 }
 </script>
+

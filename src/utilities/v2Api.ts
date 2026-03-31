@@ -56,8 +56,8 @@ export const v2Api = {
   },
 
   async getMyAnalytics(): Promise<{
-    links: { shortId: string; url: string; clickCount: number; lastClickedAt: string | null }[];
-    messages: { messageId: string; viewCount: number; lastViewedAt: string | null }[];
+    links: { shortId: string; url: string; clickCount: number; lastClickedAt: string | null; clickHistory?: string[] }[];
+    messages: { messageId: string; viewCount: number; lastViewedAt: string | null; viewHistory?: string[] }[];
   }> {
     const res = await v2Fetch('/analytics/v2/me');
     if (res.status !== 200) throw new Error('Failed to load analytics');

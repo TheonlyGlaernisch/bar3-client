@@ -65,7 +65,7 @@ export default class AnalyticsGraphCard extends Vue {
   
   generateViewsHistory() {
     const dataset = new VueLineChart.Dataset();
-    dataset.borderColor = `rgb(0, 115, 255)`
+    dataset.borderColor = `rgb(255, 107, 0)`;
     dataset.label = 'Message Views';
     dataset.fill = false;
 
@@ -74,16 +74,25 @@ export default class AnalyticsGraphCard extends Vue {
       return [];
     }
 
-    const firstRead = this.campaign.messagePixel.readHistory[0];
+    const history = this.campaign.messagePixel.readHistory;
+
+    // Single data point: show total views on that day
+    if (history.length === 1) {
+      dataset.data.push({ x: new Date(history[0]).toLocaleDateString('en-US'), y: this.campaign.messagePixel.readCount });
+      this.chartData.datasets.push(dataset);
+      return;
+    }
+
+    const firstRead = history[0];
 
     const dayInMiliseconds = 24 * 60 * 60 * 1000;
-    const totalIncrements = Math.ceil((this.campaign.messagePixel.readHistory[this.campaign.messagePixel.readHistory.length - 1] - firstRead) / dayInMiliseconds);
+    const totalIncrements = Math.ceil((history[history.length - 1] - firstRead) / dayInMiliseconds);
 
     let lastReadIndex = 0;
 
     for (let i = 1; i <= totalIncrements; i++) {
       let messagesAtIncrement = 0;
-      while(this.campaign.messagePixel.readHistory[lastReadIndex] && this.campaign.messagePixel.readHistory[lastReadIndex] < (i * dayInMiliseconds) + firstRead) {
+      while(history[lastReadIndex] && history[lastReadIndex] < (i * dayInMiliseconds) + firstRead) {
         messagesAtIncrement++;
         lastReadIndex++;
       }
@@ -114,16 +123,25 @@ export default class AnalyticsGraphCard extends Vue {
         continue;
       }
 
-      const firstRead = link.readHistory[0];
+      const history = link.readHistory;
+
+      // Single data point: show total clicks on that day
+      if (history.length === 1) {
+        dataset.data.push({ x: new Date(history[0]).toLocaleDateString('en-US'), y: link.readCount });
+        this.chartData.datasets.push(dataset);
+        continue;
+      }
+
+      const firstRead = history[0];
 
       const dayInMiliseconds = 24 * 60 * 60 * 1000;
-      const totalIncrements = Math.ceil((link.readHistory[link.readHistory.length - 1] - firstRead) / dayInMiliseconds);
+      const totalIncrements = Math.ceil((history[history.length - 1] - firstRead) / dayInMiliseconds);
 
       let lastReadIndex = 0;
 
       for (let i = 1; i <= totalIncrements; i++) {
         let readsAtIncrement = 0;
-        while(link.readHistory[lastReadIndex] && link.readHistory[lastReadIndex] < (i * dayInMiliseconds) + firstRead) {
+        while(history[lastReadIndex] && history[lastReadIndex] < (i * dayInMiliseconds) + firstRead) {
           readsAtIncrement++;
           lastReadIndex++;
         }
