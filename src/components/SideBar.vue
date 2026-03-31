@@ -1,14 +1,16 @@
 <template>
-  <v-navigation-drawer
-    :permanent="!['xs', 'sm'].includes($vuetify.breakpoint.name)"
-    :temporary="['xs', 'sm'].includes($vuetify.breakpoint.name)"
-    :hide-overlay="!['xs', 'sm'].includes($vuetify.breakpoint.name)"
-    app
-    v-model="isShowing"
-    class="elevation-0"
-  >
+  <div>
+    <!-- Desktop sidebar (md and above) -->
+    <v-navigation-drawer
+      v-if="!$vuetify.breakpoint.smAndDown"
+      permanent
+      app
+      dark
+      color="#1A1A1A"
+      class="elevation-0"
+    >
       <v-list-item style="height: 63px;">
-        <div class="text-h5 mt-3 mb-3 font-weight-medium d-flex align-center grey--text text--darken-3" @click="$router.push({'path': '/'})">
+        <div class="text-h5 mt-3 mb-3 font-weight-medium d-flex align-center" @click="$router.push({'path': '/'})">
           <v-img
             class="shrink mr-2"
             contain
@@ -16,13 +18,13 @@
             transition="scale-transition"
             width="45"
           />
-          <div class="ml-2"> 
+          <div class="ml-2 white--text">
             Bar 3
           </div>
         </div>
       </v-list-item>
 
-      <v-divider></v-divider>
+      <v-divider style="border-color: rgba(255, 107, 0, 0.4);"></v-divider>
 
       <v-list
         dense
@@ -40,6 +42,7 @@
             :key="item.title"
             :disabled="disabled"
             @click="goto(item.path)"
+            dark
           >
             <v-list-item-icon>
               <v-icon>{{ item.icon }}</v-icon>
@@ -52,6 +55,31 @@
         </v-list-item-group>
       </v-list>
     </v-navigation-drawer>
+
+    <!-- Mobile bottom navigation (sm and below) - always visible, never collapses -->
+    <v-bottom-navigation
+      v-if="$vuetify.breakpoint.smAndDown"
+      app
+      fixed
+      dark
+      color="primary"
+      background-color="#1A1A1A"
+      :value="selectedItem"
+    >
+      <v-btn
+        v-for="(item, index) in items"
+        :key="item.title"
+        :value="index"
+        :disabled="disabled"
+        @click="goto(item.path)"
+        text
+        small
+      >
+        <span style="font-size: 11px;">{{ item.title }}</span>
+        <v-icon small>{{ item.icon }}</v-icon>
+      </v-btn>
+    </v-bottom-navigation>
+  </div>
 </template>
 
 <script lang="ts">
@@ -75,7 +103,7 @@ import Vue from 'vue';
     path: '/config',
   },
   {
-    title: 'Message Creator',
+    title: 'Compose',
     icon: 'mdi-email-edit',
     path: '/message-creator',
   },
@@ -138,4 +166,3 @@ import Vue from 'vue';
     }
   }
 </script>
-
