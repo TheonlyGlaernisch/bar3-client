@@ -20,20 +20,17 @@
       <button class="ml-2" @click="logoutV2" :disabled="!v2Session">Logout</button>
     </div>
 
-    <div v-if="v2Session" class="account-info">
-      <div class="info-field">
-        <label>Session:</label>
-        <span>Logged in</span>
-      </div>
-    </div>
+    <v-alert v-if="v2Session" type="success" dense class="mt-4">
+      Logged in
+    </v-alert>
 
-    <div v-if="statusMessage" :class="['status', statusMessage.type]">
+    <v-alert v-if="statusMessage" :type="statusMessage.type === 'success' ? 'success' : 'info'" dense class="mt-4">
       {{ statusMessage.text }}
-    </div>
+    </v-alert>
 
-    <div v-if="error" class="error">
+    <v-alert v-if="error" type="error" dense class="mt-4">
       {{ error }}
-    </div>
+    </v-alert>
   </div>
 </template>
 
@@ -92,7 +89,7 @@ export default class AccountManager extends Vue {
   max-width: 600px;
   margin: 20px auto;
   padding: 20px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
 }
 
@@ -111,9 +108,11 @@ input,
 textarea {
   width: 100%;
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
   font-family: monospace;
+  background-color: transparent;
+  color: inherit;
 }
 
 button {
@@ -131,41 +130,8 @@ button:hover:not(:disabled) {
 }
 
 button:disabled {
-  background-color: #ccc;
+  background-color: #555;
+  color: #999;
   cursor: not-allowed;
-}
-
-.account-info {
-  background-color: #f5f5f5;
-  padding: 15px;
-  border-radius: 4px;
-  margin: 20px 0;
-}
-
-.info-field {
-  display: flex;
-  justify-content: space-between;
-  margin: 10px 0;
-}
-
-.status {
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 4px;
-}
-
-.status.success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.error {
-  color: #721c24;
-  background-color: #f8d7da;
-  padding: 10px;
-  border-radius: 4px;
-  margin-top: 10px;
-  border: 1px solid #f5c6cb;
 }
 </style>

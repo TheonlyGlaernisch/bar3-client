@@ -45,7 +45,7 @@
 </template>
 
 <script lang="ts">
-  import { Component, Prop, Vue } from 'vue-property-decorator';
+  import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
   import { Message, VueLineChart } from '@/types';
   import LineChart from '@/components/LineChart.vue';
 
@@ -106,6 +106,15 @@
 
     generateData() {
       if (this.graphType == 'messagesSentOverTime') {
+        this.generateSentMessagesChartData();
+      }
+    }
+
+    @Watch('sentMessages')
+    onSentMessagesChanged() {
+      if (this.graphType === 'messagesSentOverTime') {
+        this.chartData = new VueLineChart.ChartData();
+        this.loaded = false;
         this.generateSentMessagesChartData();
       }
     }

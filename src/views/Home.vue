@@ -29,7 +29,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import GraphCard from '@/components/GraphCard.vue';
 import MessagesSentCard from '@/components/MessagesSentCard.vue';
 import UpdateAvailableBanner from '@/components/UpdateAvailableBanner.vue';
-import { getPwApiKeyDetails } from '@/utilities/pwApi';
+import getAppData from '@/actions/getAppData';
 
 @Component({
   components: {
@@ -55,8 +55,11 @@ export default class Home extends Vue {
   async fetchApiDetails() {
     const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) return;
-    const details = await getPwApiKeyDetails(apiKey);
-    this.$store.commit('setAPIDetails', { used: details.used, max: details.max });
+    const data = await getAppData();
+    if (data) {
+      this.$store.commit('setAPIDetails', { used: data.apiDetails.used, max: data.apiDetails.max });
+      this.$store.commit('setSentMessages', data.sentMessages);
+    }
   }
 
   async refreshData() {
