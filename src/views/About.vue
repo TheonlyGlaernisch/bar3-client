@@ -7,7 +7,7 @@
       class="mt-10"
     >
      <v-list-item style="height: 63px;">
-        <div class="text-h5 mt-3 mb-3 font-weight-medium d-flex align-center grey--text text--darken-3">
+        <div class="text-h5 mt-3 mb-3 font-weight-medium d-flex align-center">
           <v-img
             class="shrink mr-2"
             contain
@@ -22,7 +22,7 @@
       <v-divider/>
       <v-list-item class="pa-3">
         <v-btn
-          color="black"
+          color="primary"
           depressed
           dark
           href="https://github.com/bsnk-dev/bar3-server"
@@ -49,19 +49,6 @@
           </v-icon>
           Web
         </v-btn>
-        <v-btn
-          text
-          class="ml-4"
-          @click="$emit('checkForUpdates')"
-          v-if="false"
-        >
-          <v-icon
-            left
-          >
-            mdi-refresh
-          </v-icon>
-          Check for Updates
-        </v-btn>
       </v-list-item>
     </v-card>
     <v-card
@@ -77,7 +64,8 @@
       </v-card-subtitle>
       <v-card-text>
         <div>Bar 3 is offered by bsnk-dev.</div>
-        <div>&copy; Copyright 2021 bsnk-dev. All rights reserved.</div>
+        <div class="mt-2 orange--text font-weight-medium">Provided by Glaernisch and The Reclaimed Flame.</div>
+        <div class="mt-2">&copy; Copyright 2021 bsnk-dev. All rights reserved.</div>
         <a href = "mailto: admin@bsnk.dev">Email</a>
       </v-card-text>
     </v-card>

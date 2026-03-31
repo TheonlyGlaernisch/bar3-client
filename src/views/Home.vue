@@ -1,7 +1,7 @@
 <template>
   <div class="home view-small-inner-wrapper view-padding-inner-wrapper">
     <h1>Dashboard</h1>
-    <div class="text-subtitle-1 grey--text text--darken-2">Last refreshed {{ refreshedSecondsAgo }} second{{ refreshedSecondsAgo != 1 ? 's' : '' }} ago</div>
+    <div class="text-subtitle-1 grey--text text--lighten-1">Last refreshed {{ refreshedSecondsAgo }} second{{ refreshedSecondsAgo != 1 ? 's' : '' }} ago</div>
     <update-available-banner class="mt-4"/>
     <div class="dashboard-cards-container mt-6">
       <graph-card class="dashboard-card" graphType="messagesSentOverTime"/>
@@ -11,11 +11,11 @@
     <v-btn
       fab
       fixed
-      color="blue"
+      color="primary"
       dark
       bottom
       right
-      @click="$emit('refresh')"
+      @click="refreshData"
     >
       <v-icon>
         mdi-refresh
@@ -29,6 +29,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import GraphCard from '@/components/GraphCard.vue';
 import MessagesSentCard from '@/components/MessagesSentCard.vue';
 import UpdateAvailableBanner from '@/components/UpdateAvailableBanner.vue';
+import { getPwApiKeyDetails } from '@/utilities/pwApi';
 
 @Component({
   components: {
@@ -51,8 +52,21 @@ export default class Home extends Vue {
     }, 1000);
   }
 
-  mounted() {
+  async fetchApiDetails() {
+    const apiKey = localStorage.getItem('apiKey');
+    if (!apiKey) return;
+    const details = await getPwApiKeyDetails(apiKey);
+    this.$store.commit('setAPIDetails', { used: details.used, max: details.max });
+  }
+
+  async refreshData() {
+    this.$store.commit('setLastRefreshed', Date.now());
+    await this.fetchApiDetails();
+  }
+
+  async mounted() {
     this.updateLastRefreshed();
+    await this.refreshData();
   }
 }
 </script>

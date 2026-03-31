@@ -3,9 +3,10 @@
     outlined
     width="400px"
     height="380px"
+    class="graph-card"
   >
     <template v-if="graphType == 'messagesSentOverTime'">
-      <v-card-title>
+      <v-card-title class="card-title-orange">
         Message Sending Activity
       </v-card-title>
       <div
@@ -15,7 +16,7 @@
       </div>
     </template>
     <template v-if="graphType == 'apiRequests'">
-      <v-card-title>
+      <v-card-title class="card-title-orange">
         API Requests
       </v-card-title>
       <v-card-text>
@@ -70,7 +71,7 @@
     generateSentMessagesChartData() {
       const dataset = new VueLineChart.Dataset();
       dataset.label = 'Message Count';
-      dataset.borderColor = `rgb(0, 115, 255)`;
+      dataset.borderColor = `rgb(255, 107, 0)`;
       dataset.fill = false;
 
       if (this.sentMessages.length == 0) {
@@ -114,3 +115,14 @@
     }
   }
 </script>
+
+<style scoped>
+  .graph-card {
+    border-radius: 12px !important;
+  }
+
+  .card-title-orange {
+    color: #FF6B00;
+    font-weight: 600;
+  }
+</style>
