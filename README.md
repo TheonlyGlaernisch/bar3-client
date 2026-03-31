@@ -25,66 +25,19 @@ npm run lint
 
 ## Required server-side changes (bar3-server)
 
-Three files in `TheonlyGlaernisch/bar3-server` need to be edited to make the **Dashboard**
-fully functional for v2 (MongoDB-backed) users. Apply them in the order shown below.
+One file in `TheonlyGlaernisch/bar3-server` **must** be edited for the Dashboard to work
+correctly for v2 (MongoDB-backed) users. Two additional edits are optional but recommended.
 
 > **Note on analytics:** `src/api/routers/v2/analytics.ts` already returns full
 > `clickHistory` and `viewHistory` arrays — no changes needed there.
 
 ---
 
-### 1 – Add `apiDetails` to `UserKeyState` (`src/services/state.ts`)
-
-The per-user session object is missing an `apiDetails` slot. The `/appData` route currently
-falls back to the global `state.requestsUsed / requestsMax` counters, which are only
-updated by the legacy single-user loop and are always `0` for v2 users.
-
-```diff
- interface UserKeyState {
-   sentMessages: unknown[];
-   config: Config;
-   applicationOn: boolean; // per-user runtime toggle (NOT persisted)
-+  apiDetails: { used: number; max: number };
- }
-```
-
----
-
-### 2 – Initialise `apiDetails` and use it in `/appData` (`src/api/index.ts`)
-
-Two edits in the same file:
-
-**a) `ensureSession()` — initialise the new field:**
-
-```diff
-     state.userKeys[apiKey] = {
-       sentMessages: [],
-       config: sessionConfig,
-       applicationOn: false,
-+      apiDetails: { used: 0, max: 0 },
-     };
-```
-
-**b) `GET /api/appData` — return per-user details instead of the global counters:**
-
-```diff
--    apiDetails: {
--      used: state.requestsUsed,
--      max: state.requestsMax,
--    },
-+    apiDetails: scopedSession.apiDetails ?? { used: state.requestsUsed, max: state.requestsMax },
-```
-
-> **Note:** The client already has a fallback — when the server returns `{used:0, max:0}` it
-> queries the P&W GraphQL API directly. The server fix is still recommended so the value is
-> accurate even when the browser cannot reach `api.politicsandwar.com`.
-
----
-
-### 3 – Push v2 automation sent-messages into per-user state (`src/services/v2AutomationRunner.ts`)
+### ✅ Required – Push v2 automation sent-messages into per-user state (`src/services/v2AutomationRunner.ts`)
 
 The automation runner currently discards the return value of `sendMessageWithConfig`, so
-`/api/appData` never sees any v2-sent messages. Two additions are needed:
+`/api/appData` never sees any v2-sent messages and the *Messages Sent* card is always empty.
+Two additions are needed:
 
 **a) Add imports at the top of the file:**
 
@@ -108,5 +61,50 @@ The automation runner currently discards the return value of `sendMessageWithCon
 +      state.userKeys[pwKey].sentMessages.push(msg);
 +    }
 +    seen.add(nation.nation_id);
+```
+
+---
+
+### ⚪ Optional – Add `apiDetails` to `UserKeyState` (`src/services/state.ts`)
+
+> **Note:** The client now always queries the P&W GraphQL API directly with the stored API
+> key to retrieve request usage, so the server no longer needs to supply this value.
+> These two changes are recommended only as a defensive fallback (e.g. if the browser
+> cannot reach `api.politicsandwar.com`).
+
+The per-user session object is missing an `apiDetails` slot. The `/appData` route currently
+falls back to the global `state.requestsUsed / requestsMax` counters, which are always `0`
+for v2 users.
+
+```diff
+ interface UserKeyState {
+   sentMessages: unknown[];
+   config: Config;
+   applicationOn: boolean; // per-user runtime toggle (NOT persisted)
++  apiDetails: { used: number; max: number };
+ }
+```
+
+Then in `src/api/index.ts`, two edits:
+
+**a) `ensureSession()` — initialise the new field:**
+
+```diff
+     state.userKeys[apiKey] = {
+       sentMessages: [],
+       config: sessionConfig,
+       applicationOn: false,
++      apiDetails: { used: 0, max: 0 },
+     };
+```
+
+**b) `GET /api/appData` — return per-user details instead of the global counters:**
+
+```diff
+-    apiDetails: {
+-      used: state.requestsUsed,
+-      max: state.requestsMax,
+-    },
++    apiDetails: scopedSession.apiDetails ?? { used: state.requestsUsed, max: state.requestsMax },
 ```
 
