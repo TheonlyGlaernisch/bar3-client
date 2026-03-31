@@ -3,7 +3,7 @@
  * Fetches per-user API key details (daily request usage).
  */
 
-const PW_GRAPHQL_URL = 'https://api.politicsandwar.com/graphql/v1';
+const PW_GRAPHQL_URL = 'https://api.politicsandwar.com/graphql';
 
 export interface PwApiKeyDetails {
   used: number;
@@ -12,23 +12,25 @@ export interface PwApiKeyDetails {
 
 /**
  * Fetch the current user's P&W API key request usage.
+ * Uses the P&W GraphQL v3 `me` query which returns `requests` (used today)
+ * and `max_requests` (daily cap) scoped to the authenticated API key.
  * Returns { used: 0, max: 0 } on any error.
  */
 export async function getPwApiKeyDetails(apiKey: string): Promise<PwApiKeyDetails> {
   try {
-    const query = '{ api_key_details { requests_today max_requests } }';
-    const url = `${PW_GRAPHQL_URL}?apikey=${encodeURIComponent(apiKey)}&query=${encodeURIComponent(query)}`;
+    const query = '{ me { requests max_requests } }';
+    const url = `${PW_GRAPHQL_URL}?api_key=${encodeURIComponent(apiKey)}&query=${encodeURIComponent(query)}`;
 
     const res = await fetch(url);
     if (!res.ok) return { used: 0, max: 0 };
 
     const data = await res.json();
-    const details = data?.data?.api_key_details;
-    if (!details) return { used: 0, max: 0 };
+    const me = data?.data?.me;
+    if (!me) return { used: 0, max: 0 };
 
     return {
-      used: details.requests_today ?? 0,
-      max: details.max_requests ?? 0,
+      used: me.requests ?? 0,
+      max: me.max_requests ?? 0,
     };
   } catch {
     return { used: 0, max: 0 };
