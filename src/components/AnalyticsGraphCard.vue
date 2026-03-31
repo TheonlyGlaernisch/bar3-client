@@ -86,7 +86,7 @@ export default class AnalyticsGraphCard extends Vue {
     const firstRead = history[0];
 
     const dayInMiliseconds = 24 * 60 * 60 * 1000;
-    const totalIncrements = Math.ceil((history[history.length - 1] - firstRead) / dayInMiliseconds);
+    const totalIncrements = Math.ceil((history[history.length - 1] - firstRead) / dayInMiliseconds) + 1;
 
     let lastReadIndex = 0;
 
@@ -135,7 +135,7 @@ export default class AnalyticsGraphCard extends Vue {
       const firstRead = history[0];
 
       const dayInMiliseconds = 24 * 60 * 60 * 1000;
-      const totalIncrements = Math.ceil((history[history.length - 1] - firstRead) / dayInMiliseconds);
+      const totalIncrements = Math.ceil((history[history.length - 1] - firstRead) / dayInMiliseconds) + 1;
 
       let lastReadIndex = 0;
 
