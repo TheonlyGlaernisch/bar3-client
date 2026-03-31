@@ -18,6 +18,7 @@ export default new Vuex.Store({
     apiDetails: {
       used: 0,
       max: 0,
+      remaining: 0,
     },
     newUpdate: null as null | GitHubRelease,
     isLoggedIn: !!localStorage.getItem('pwSessionToken')
@@ -120,7 +121,7 @@ export default new Vuex.Store({
       state.sentMessages = sentMessagesRefresh;
     },
 
-    setAPIDetails(state, newAPIDetails: {used: number; max: number}) {
+    setAPIDetails(state, newAPIDetails: {used: number; max: number; remaining: number}) {
         state.apiDetails = newAPIDetails;
     },
 

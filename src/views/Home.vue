@@ -65,7 +65,7 @@ export default class Home extends Vue {
 
     // Always query P&W directly with the stored API key so the dashboard
     // shows accurate usage regardless of what the server reports.
-    const details = await getPwApiKeyDetails(apiKey).catch(() => ({ used: 0, max: 0 }));
+    const details = await getPwApiKeyDetails(apiKey).catch(() => ({ used: 0, max: 0, remaining: 0 }));
     if (details.max > 0) {
       this.$store.commit('setAPIDetails', details);
     } else if (data && data.apiDetails.max > 0) {
