@@ -25,65 +25,88 @@ npm run lint
 
 ## Required server-side changes (bar3-server)
 
-The following two changes are needed in `TheonlyGlaernisch/bar3-server` to make the
-**Dashboard** fully functional for v2 (MongoDB-backed) users.
+Three files in `TheonlyGlaernisch/bar3-server` need to be edited to make the **Dashboard**
+fully functional for v2 (MongoDB-backed) users. Apply them in the order shown below.
 
-### 1 – Persist v2 automation sent-messages per user (`src/services/v2AutomationRunner.ts`)
+> **Note on analytics:** `src/api/routers/v2/analytics.ts` already returns full
+> `clickHistory` and `viewHistory` arrays — no changes needed there.
 
-The automation runner stores sent messages in the global `messages.sentMessages` singleton,
-but `/api/appData` reads from the per-user `state.userKeys[pwKey].sentMessages` store.
-Add the snippet below inside the per-account send loop, after `messagesService.sendMessageWithConfig()`:
+---
 
-```typescript
-// At the top of the file, import state:
-import state from '../services/state';
+### 1 – Add `apiDetails` to `UserKeyState` (`src/services/state.ts`)
 
-// After the sendMessageWithConfig call inside the per-account loop:
-const msg = await messagesService.sendMessageWithConfig(configLike, nation).catch(() => undefined);
-if (msg) {
-  // Ensure a per-user session slot exists and push the message so /api/appData returns it.
-  if (!state.userKeys[pwKey]) {
-    state.userKeys[pwKey] = { sentMessages: [], config: new Config(), applicationOn: false, apiDetails: { used: 0, max: 0 } };
-  }
-  state.userKeys[pwKey].sentMessages.push(msg);
-}
-seen.add(nation.nation_id);
-sentThisTick++;
+The per-user session object is missing an `apiDetails` slot. The `/appData` route currently
+falls back to the global `state.requestsUsed / requestsMax` counters, which are only
+updated by the legacy single-user loop and are always `0` for v2 users.
+
+```diff
+ interface UserKeyState {
+   sentMessages: unknown[];
+   config: Config;
+   applicationOn: boolean; // per-user runtime toggle (NOT persisted)
++  apiDetails: { used: number; max: number };
+ }
 ```
 
-### 2 – Per-user API usage in `/api/appData` (`src/services/state.ts` + `src/api/index.ts`)
+---
 
-The global `state.requestsUsed` / `state.requestsMax` counters are only updated by the
-legacy single-user search loop, so they are always `0` for v2 users.
+### 2 – Initialise `apiDetails` and use it in `/appData` (`src/api/index.ts`)
 
-**Option A (recommended):** Store per-user API details in `UserKeyState` and populate them
-from the P&W GraphQL response after each automation tick:
+Two edits in the same file:
 
-```typescript
-// state.ts – extend UserKeyState:
-interface UserKeyState {
-  sentMessages: unknown[];
-  config: Config;
-  applicationOn: boolean;
-  apiDetails: { used: number; max: number }; // add this
-}
+**a) `ensureSession()` — initialise the new field:**
 
-// In ensureSession(), initialise the new field:
-state.userKeys[apiKey] = {
-  sentMessages: [],
-  config: sessionConfig,
-  applicationOn: false,
-  apiDetails: { used: 0, max: 0 }, // add this
-};
-
-// In /api/appData route (src/api/index.ts), return per-user details:
-apiDetails: scopedSession.apiDetails ?? { used: state.requestsUsed, max: state.requestsMax },
+```diff
+     state.userKeys[apiKey] = {
+       sentMessages: [],
+       config: sessionConfig,
+       applicationOn: false,
++      apiDetails: { used: 0, max: 0 },
+     };
 ```
 
-Then in `v2AutomationRunner.ts`, after each tick for a given user, query P&W GraphQL to
-refresh `state.userKeys[pwKey].apiDetails`.
+**b) `GET /api/appData` — return per-user details instead of the global counters:**
 
-**Note:** The client already has a fallback — when the server returns `{used:0, max:0}` it
-queries the P&W GraphQL API directly. The server fix is still recommended so that the value
-is accurate even when the browser cannot reach `api.politicsandwar.com`.
+```diff
+-    apiDetails: {
+-      used: state.requestsUsed,
+-      max: state.requestsMax,
+-    },
++    apiDetails: scopedSession.apiDetails ?? { used: state.requestsUsed, max: state.requestsMax },
+```
+
+> **Note:** The client already has a fallback — when the server returns `{used:0, max:0}` it
+> queries the P&W GraphQL API directly. The server fix is still recommended so the value is
+> accurate even when the browser cannot reach `api.politicsandwar.com`.
+
+---
+
+### 3 – Push v2 automation sent-messages into per-user state (`src/services/v2AutomationRunner.ts`)
+
+The automation runner currently discards the return value of `sendMessageWithConfig`, so
+`/api/appData` never sees any v2-sent messages. Two additions are needed:
+
+**a) Add imports at the top of the file:**
+
+```diff
++import { Config } from '../interfaces/types';
++import state from '../services/state';
+ import superagent from 'superagent';
+```
+
+**b) Inside the per-account send loop, capture the result and push it to the session:**
+
+```diff
+-    await messagesService.sendMessageWithConfig(configLike, nation).catch(() => undefined);
+-    seen.add(nation.nation_id);
++    const msg = await messagesService.sendMessageWithConfig(configLike, nation).catch(() => undefined);
++    if (msg) {
++      // Ensure a per-user session slot exists so /api/appData can return the message.
++      if (!state.userKeys[pwKey]) {
++        state.userKeys[pwKey] = { sentMessages: [], config: new Config(), applicationOn: false, apiDetails: { used: 0, max: 0 } };
++      }
++      state.userKeys[pwKey].sentMessages.push(msg);
++    }
++    seen.add(nation.nation_id);
+```
 
