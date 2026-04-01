@@ -71,10 +71,10 @@ export default class DiscordLogin extends Vue {
     }
   }
 
-  login() {
+  async login() {
     this.loading = true;
     this.error = '';
-    discordAuth.redirectToDiscord();
+    await discordAuth.redirectToDiscord();
   }
 }
 </script>
