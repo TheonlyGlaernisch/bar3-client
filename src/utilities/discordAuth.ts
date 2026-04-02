@@ -80,11 +80,13 @@ export const discordAuth = {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
+        /* eslint-disable @typescript-eslint/camelcase */
         client_id: process.env.VUE_APP_DISCORD_CLIENT_ID || '',
         grant_type: 'authorization_code',
         code,
         redirect_uri: redirectUri,
         code_verifier: verifier,
+        /* eslint-enable @typescript-eslint/camelcase */
       }),
     });
     if (!tokenRes.ok) {
