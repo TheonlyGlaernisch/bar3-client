@@ -14,7 +14,7 @@ export async function apiFetch(
     ...(init.headers as Record<string, string> || {}),
   };
 
-  if (apiKey) headers['x-api-key'] = apiKey;
+  if (apiKey && (init.method || 'GET').toUpperCase() !== 'GET') headers['x-api-key'] = apiKey;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
 
   const response = await fetch(`${SERVER_BASE_URL}${path}`, {
