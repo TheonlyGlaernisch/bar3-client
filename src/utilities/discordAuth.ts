@@ -44,7 +44,7 @@ export const discordAuth = {
   async redirectToDiscord(): Promise<void> {
     const clientId = process.env.VUE_APP_DISCORD_CLIENT_ID || '';
     if (!clientId) {
-      console.error('[discordAuth] VUE_APP_DISCORD_CLIENT_ID is not set. Discord login will not work.');
+      throw new Error('[discordAuth] VUE_APP_DISCORD_CLIENT_ID is not set. Configure the Discord application client ID.');
     }
 
     const verifier = await generateCodeVerifier();
