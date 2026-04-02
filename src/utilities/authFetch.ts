@@ -19,6 +19,7 @@ export async function apiFetch(
 
   const response = await fetch(`${SERVER_BASE_URL}${path}`, {
     ...init,
+    credentials: 'include',
     headers,
     body: body !== undefined ? JSON.stringify(body) : init.body,
   });

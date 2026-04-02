@@ -10,6 +10,7 @@ import About from '@/views/About.vue'
 import Help from '@/views/Help.vue'
 import DiscordLogin from '@/views/DiscordLogin.vue'
 import DiscordCallback from '@/views/DiscordCallback.vue'
+import { discordAuth } from '@/utilities/discordAuth'
 
 Vue.use(VueRouter)
 
@@ -33,21 +34,14 @@ const router = new VueRouter({
   routes
 })
 
-router.beforeEach((to, _from, next) => {
-  // Discord redirects to the site root with ?code=... when using root as
-  // redirect_uri. Forward those requests into the callback route so the
-  // existing DiscordCallback component handles the exchange exactly once.
-  if (to.query.code && to.path !== '/auth/discord/callback') {
-    const oauthQuery: Record<string, string> = { code: to.query.code as string };
-    if (to.query.state) {
-      oauthQuery.state = to.query.state as string;
-    }
-    next({ path: '/auth/discord/callback', query: oauthQuery });
+router.beforeEach(async (to, _from, next) => {
+  if (DISCORD_PUBLIC_PATHS.includes(to.path)) {
+    next();
     return;
   }
 
-  const isDiscordAuthed = !!localStorage.getItem('discordSessionToken');
-  if (!isDiscordAuthed && !DISCORD_PUBLIC_PATHS.includes(to.path)) {
+  const authed = await discordAuth.isAuthed();
+  if (!authed) {
     next('/discord-login');
   } else {
     next();
