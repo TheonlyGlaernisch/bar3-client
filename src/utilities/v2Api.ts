@@ -1,3 +1,6 @@
+import { apiFetch } from '@/utilities/authFetch';
+import getAppData from '@/actions/getAppData';
+
 const SERVER_BASE_URL =
   process.env.VUE_APP_SERVER_URL || 'https://bar3-server.onrender.com';
 
@@ -31,14 +34,27 @@ export const v2Api = {
   },
 
   async getAutomationState(): Promise<{ enabled: boolean }> {
-    const res = await v2Fetch('/api/v2/automation/state');
-    if (res.status !== 200) throw new Error('Failed to load automation state');
-    return res.json();
+    try {
+      const res = await v2Fetch('/api/v2/automation/state');
+      if (res.status !== 200) throw new Error('Failed to load automation state');
+      return res.json();
+    } catch (e) {
+      console.warn('v2 getAutomationState failed, falling back to legacy endpoint:', e);
+      const appData = await getAppData();
+      if (!appData) throw new Error('Failed to load automation state via fallback endpoint');
+      return { enabled: appData.applicationOn };
+    }
   },
 
   async setAutomationState(enabled: boolean): Promise<void> {
-    const res = await v2Fetch('/api/v2/automation/state', { method: 'POST' }, { enabled });
-    if (res.status !== 204) throw new Error('Failed to update automation state');
+    try {
+      const res = await v2Fetch('/api/v2/automation/state', { method: 'POST' }, { enabled });
+      if (res.status !== 204) throw new Error('Failed to update automation state');
+    } catch (e) {
+      console.warn('v2 setAutomationState failed, falling back to legacy endpoint:', e);
+      const res = await apiFetch('/api/setApplicationState', { method: 'POST' }, { applicationOn: enabled });
+      if (res.status !== 204) throw new Error('Failed to update automation state via fallback endpoint');
+    }
   },
 
   async upsertTemplate(payload: { subject: string; bodyText?: string; bodyHtml?: string; bodyCss?: string; currentEditor?: number }): Promise<void> {
