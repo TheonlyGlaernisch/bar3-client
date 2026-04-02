@@ -103,8 +103,10 @@ export const discordAuth = {
     const discordId = meData.id;
 
     // Check the bar3_client role via flame_bot.
+    const rolesHeaders: Record<string, string> = {};
+    if (FLAME_BOT_API_KEY) rolesHeaders['X-API-Key'] = FLAME_BOT_API_KEY;
     const rolesRes = await fetch(`${FLAME_BOT_URL}/api/roles/${discordId}`, {
-      headers: { 'X-API-Key': FLAME_BOT_API_KEY },
+      headers: rolesHeaders,
     });
     if (rolesRes.status === 401) {
       throw new Error('Invalid flame_bot API key — please contact an administrator');
