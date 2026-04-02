@@ -1,30 +1,32 @@
 <template>
   <v-app>
-    <v-app-bar
-      app
-      color="#1A1A1A"
-      dark
-      flat
-    >
-      <div class="d-flex align-center">
-        <v-img
-          class="shrink mr-2"
-          contain
-          src="@/assets/bar3.png"
-          transition="scale-transition"
-          width="45"
-        />
-        <div class="ml-2 white--text text-h6 font-weight-medium">
-          Bar 3
+    <template v-if="isDiscordAuthed">
+      <v-app-bar
+        app
+        color="#1A1A1A"
+        dark
+        flat
+      >
+        <div class="d-flex align-center">
+          <v-img
+            class="shrink mr-2"
+            contain
+            src="@/assets/bar3.png"
+            transition="scale-transition"
+            width="45"
+          />
+          <div class="ml-2 white--text text-h6 font-weight-medium">
+            Bar 3
+          </div>
         </div>
-      </div>
 
-      <v-spacer />
+        <v-spacer />
 
-      <v2-automation-toggle class="mr-2" />
-    </v-app-bar>
+        <v2-automation-toggle class="mr-2" />
+      </v-app-bar>
 
-    <side-bar v-model="sideBarOpen" :disabled="false"/>
+      <side-bar v-model="sideBarOpen" :disabled="false"/>
+    </template>
 
     <v-main>
       <router-view />
@@ -48,6 +50,10 @@ import { v2Api } from '@/utilities/v2Api';
 })
 export default class App extends Vue {
   sideBarOpen = false;
+
+  get isDiscordAuthed(): boolean {
+    return this.$store.getters.isDiscordAuthed;
+  }
 
   async mounted() {
     const token = localStorage.getItem('pwSessionToken') || '';

@@ -8,8 +8,12 @@ import Analytics from '@/views/Analytics.vue'
 import AccountManager from '@/components/AccountManager.vue'
 import About from '@/views/About.vue'
 import Help from '@/views/Help.vue'
+import DiscordLogin from '@/views/DiscordLogin.vue'
+import DiscordCallback from '@/views/DiscordCallback.vue'
 
 Vue.use(VueRouter)
+
+const DISCORD_PUBLIC_PATHS = ['/discord-login', '/auth/discord/callback'];
 
 const routes: Array<RouteConfig> = [
   { path: '/', redirect: '/dashboard' },
@@ -20,11 +24,22 @@ const routes: Array<RouteConfig> = [
   { path: '/account', name: 'Account', component: AccountManager },
   { path: '/about', name: 'About', component: About },
   { path: '/help', name: 'Help', component: Help },
+  { path: '/discord-login', name: 'Discord Login', component: DiscordLogin },
+  { path: '/auth/discord/callback', name: 'Discord Callback', component: DiscordCallback },
 ]
 
 const router = new VueRouter({
   mode: 'history',
   routes
 })
+
+router.beforeEach((to, _from, next) => {
+  const isDiscordAuthed = !!localStorage.getItem('discordSessionToken');
+  if (!isDiscordAuthed && !DISCORD_PUBLIC_PATHS.includes(to.path)) {
+    next('/discord-login');
+  } else {
+    next();
+  }
+});
 
 export default router

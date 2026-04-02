@@ -20,7 +20,8 @@ export default new Vuex.Store({
       max: 0,
     },
     newUpdate: null as null | GitHubRelease,
-    isLoggedIn: !!localStorage.getItem('pwSessionToken')
+    isLoggedIn: !!localStorage.getItem('pwSessionToken'),
+    isDiscordAuthed: !!localStorage.getItem('discordSessionToken')
   },
   getters: {
     applicationOn(state) {
@@ -31,6 +32,7 @@ export default new Vuex.Store({
       return state.serverIP;
     },
     isLoggedIn: (state) => state.isLoggedIn,
+    isDiscordAuthed: (state) => state.isDiscordAuthed,
 
     sentMessages(state) {
       return state.sentMessages;
@@ -114,6 +116,9 @@ export default new Vuex.Store({
     },
     setLoggedIn(state, isLoggedIn) {
     state.isLoggedIn = isLoggedIn;
+    },
+    setDiscordAuthed(state, value: boolean) {
+      state.isDiscordAuthed = value;
     },
 
     setSentMessages(state, sentMessagesRefresh) {
