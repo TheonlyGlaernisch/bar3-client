@@ -51,9 +51,7 @@ export const discordAuth = {
     const challenge = await generateCodeChallenge(verifier);
     sessionStorage.setItem(PKCE_VERIFIER_KEY, verifier);
 
-    const redirectUri = encodeURIComponent(
-      `${window.location.origin}/auth/discord/callback`
-    );
+    const redirectUri = encodeURIComponent(window.location.origin);
     const scope = encodeURIComponent('identify');
     window.location.href =
       `https://discord.com/oauth2/authorize` +
@@ -71,7 +69,7 @@ export const discordAuth = {
    * Returns the Discord user ID, which is stored as the session identifier.
    */
   async exchangeCode(code: string): Promise<string> {
-    const redirectUri = `${window.location.origin}/auth/discord/callback`;
+    const redirectUri = window.location.origin;
     const verifier = sessionStorage.getItem(PKCE_VERIFIER_KEY) || '';
     sessionStorage.removeItem(PKCE_VERIFIER_KEY);
 
