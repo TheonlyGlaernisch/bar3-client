@@ -31,7 +31,6 @@
                 color="#5865F2"
                 dark
                 class="discord-btn"
-                :loading="loading"
                 @click="login"
               >
                 <v-icon left>mdi-discord</v-icon>
@@ -55,14 +54,13 @@ import { discordAuth } from '@/utilities/discordAuth';
 
 @Component
 export default class DiscordLogin extends Vue {
-  loading = false;
   error = '';
 
   created() {
     // If already authenticated, go straight to the app.
-    if (discordAuth.isAuthed()) {
-      this.$router.replace('/');
-    }
+    discordAuth.isAuthed().then(authed => {
+      if (authed) this.$router.replace('/');
+    });
 
     // Surface any error message passed as a query param (e.g. from the callback).
     const queryError = this.$route.query.error;
@@ -71,10 +69,8 @@ export default class DiscordLogin extends Vue {
     }
   }
 
-  async login() {
-    this.loading = true;
-    this.error = '';
-    await discordAuth.redirectToDiscord();
+  login() {
+    discordAuth.redirectToDiscord();
   }
 }
 </script>

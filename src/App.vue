@@ -40,6 +40,7 @@ import Component from 'vue-class-component';
 import SideBar from '@/components/SideBar.vue';
 import V2AutomationToggle from '@/components/V2AutomationToggle.vue';
 import { v2Api } from '@/utilities/v2Api';
+import { discordAuth } from '@/utilities/discordAuth';
 
 @Component({
   name: 'App',
@@ -56,6 +57,9 @@ export default class App extends Vue {
   }
 
   async mounted() {
+    const authed = await discordAuth.isAuthed();
+    this.$store.commit('setDiscordAuthed', authed);
+
     const token = localStorage.getItem('pwSessionToken') || '';
     if (!token) return;
     try {

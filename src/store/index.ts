@@ -21,7 +21,7 @@ export default new Vuex.Store({
     },
     newUpdate: null as null | GitHubRelease,
     isLoggedIn: !!localStorage.getItem('pwSessionToken'),
-    isDiscordAuthed: !!localStorage.getItem('discordSessionToken')
+    isDiscordAuthed: false
   },
   getters: {
     applicationOn(state) {
