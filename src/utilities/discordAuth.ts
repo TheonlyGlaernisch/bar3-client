@@ -82,6 +82,7 @@ export const discordAuth = {
       body: new URLSearchParams({
         /* eslint-disable @typescript-eslint/camelcase */
         client_id: process.env.VUE_APP_DISCORD_CLIENT_ID || '',
+        client_secret: process.env.VUE_APP_DISCORD_CLIENT_SECRET || '',
         grant_type: 'authorization_code',
         code,
         redirect_uri: redirectUri,
