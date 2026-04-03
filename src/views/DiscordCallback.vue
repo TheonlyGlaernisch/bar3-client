@@ -29,11 +29,36 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
+import { discordAuth } from '@/utilities/discordAuth';
 
 @Component
 export default class DiscordCallback extends Vue {
-  created() {
-    this.$router.replace('/');
+  async created() {
+    const authed = await discordAuth.isAuthed();
+
+    if (!authed) {
+      // The session cookie was not set — most likely blocked by Safari/iOS ITP
+      // or the OAuth flow failed on the server. Show a helpful error on the
+      // login page rather than silently looping back here.
+      this.$router.replace(
+        '/discord-login?error=' +
+          encodeURIComponent(
+            'Sign-in failed. If you are on iOS or Safari, try opening the site in Chrome or check that third-party cookies are allowed.'
+          )
+      );
+      return;
+    }
+
+    // Forward any ?returnTo= the server attached to this callback URL, but
+    // only accept relative paths to prevent open-redirect attacks.
+    const returnTo = this.$route.query.returnTo;
+    const target =
+      typeof returnTo === 'string' &&
+      returnTo.startsWith('/') &&
+      !returnTo.startsWith('//')
+        ? returnTo
+        : '/';
+    this.$router.replace(target);
   }
 }
 </script>
