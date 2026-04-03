@@ -42,10 +42,21 @@ router.beforeEach(async (to, _from, next) => {
 
   const authed = await discordAuth.isAuthed();
   if (!authed) {
-    next('/discord-login');
-  } else {
-    next();
+    next(`/discord-login?returnTo=${encodeURIComponent(to.fullPath)}`);
+    return;
   }
+
+  // Consume a ?returnTo= parameter left by the server after OAuth, but only
+  // accept relative paths to prevent open-redirect attacks.
+  if (to.query.returnTo) {
+    const returnTo = to.query.returnTo as string;
+    if (returnTo.startsWith('/') && !returnTo.startsWith('//')) {
+      next({ path: returnTo, replace: true });
+      return;
+    }
+  }
+
+  next();
 });
 
 export default router

@@ -8,9 +8,15 @@ export const discordAuth = {
   /**
    * Redirect the browser to the server-controlled Discord OAuth start.
    * The server handles PKCE/secret exchange and sets a session cookie on return.
+   * An optional `returnTo` path can be passed so the server can redirect back
+   * to the original page after a successful login.
    */
-  redirectToDiscord(): void {
-    window.location.href = `${SERVER_BASE_URL}/auth/discord`;
+  redirectToDiscord(returnTo?: string): void {
+    const url = new URL(`${SERVER_BASE_URL}/auth/discord`);
+    if (returnTo) {
+      url.searchParams.set('returnTo', returnTo);
+    }
+    window.location.href = url.toString();
   },
 
   /**
