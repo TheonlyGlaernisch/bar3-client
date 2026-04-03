@@ -70,7 +70,8 @@ export default class DiscordLogin extends Vue {
   }
 
   login() {
-    discordAuth.redirectToDiscord();
+    const returnTo = this.$route.query.returnTo;
+    discordAuth.redirectToDiscord(typeof returnTo === 'string' && returnTo ? returnTo : undefined);
   }
 }
 </script>
