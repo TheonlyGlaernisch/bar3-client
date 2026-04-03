@@ -21,6 +21,7 @@ async function v2Fetch(path: string, init: RequestInit = {}, body?: JsonValue) {
 
   return fetch(`${SERVER_BASE_URL}${path}`, {
     ...init,
+    credentials: 'include',
     headers,
     body: body !== undefined ? JSON.stringify(body) : init.body,
   });
