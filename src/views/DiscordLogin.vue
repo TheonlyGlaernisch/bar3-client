@@ -23,6 +23,9 @@
 
               <v-alert v-if="error" type="error" dense class="mb-4">
                 {{ error }}
+                <div v-if="errorHint" class="caption mt-1">
+                  {{ errorHint }}
+                </div>
                 <div v-if="errorCode" class="caption mt-1">
                   Error code: {{ errorCode }}
                 </div>
@@ -59,11 +62,16 @@ import { discordAuth } from '@/utilities/discordAuth';
 export default class DiscordLogin extends Vue {
   error = '';
   errorCode = '';
+  errorHint = '';
 
   private mapAuthError(rawError: string): string {
+    this.errorCode = '';
+    this.errorHint = '';
     const normalized = rawError.toLowerCase();
     if (normalized.startsWith('role_check_failed')) {
       this.errorCode = rawError;
+      this.errorHint =
+        'If you already have the correct role, this is usually a temporary backend issue (flame_bot unreachable, API key mismatch, or bot cache not ready).';
       return 'Role verification is temporarily unavailable. Please try again in a moment.';
     }
     if (normalized === 'no_role') {
