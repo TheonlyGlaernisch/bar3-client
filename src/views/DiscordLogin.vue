@@ -23,6 +23,12 @@
 
               <v-alert v-if="error" type="error" dense class="mb-4">
                 {{ error }}
+                <div v-if="errorHint" class="caption mt-1">
+                  {{ errorHint }}
+                </div>
+                <div v-if="errorCode" class="caption mt-1">
+                  Error code: {{ errorCode }}
+                </div>
               </v-alert>
 
               <v-btn
@@ -55,6 +61,30 @@ import { discordAuth } from '@/utilities/discordAuth';
 @Component
 export default class DiscordLogin extends Vue {
   error = '';
+  errorCode = '';
+  errorHint = '';
+
+  private mapAuthError(rawError: string): string {
+    this.errorCode = '';
+    this.errorHint = '';
+    const normalized = rawError.toLowerCase();
+    if (normalized.startsWith('role_check_failed')) {
+      this.errorCode = rawError;
+      this.errorHint =
+        'If you already have the correct role, this is usually a temporary backend issue (flame_bot unreachable, API key mismatch, or bot cache not ready).';
+      return 'Role verification is temporarily unavailable. Please try again in a moment.';
+    }
+    if (normalized === 'no_role') {
+      return 'Your Discord account is signed in, but it does not currently have access to Bar 3.';
+    }
+    if (normalized === 'auth_failed') {
+      return 'Discord sign-in failed. Please try again.';
+    }
+    if (normalized === 'no_code') {
+      return 'No authorization code was received from Discord. Please try again.';
+    }
+    return rawError;
+  }
 
   created() {
     // If already authenticated, go straight to the app.
@@ -65,7 +95,7 @@ export default class DiscordLogin extends Vue {
     // Surface any error message passed as a query param (e.g. from the callback).
     const queryError = this.$route.query.error;
     if (typeof queryError === 'string' && queryError) {
-      this.error = queryError;
+      this.error = this.mapAuthError(queryError);
     }
   }
 
