@@ -23,9 +23,6 @@
 
               <v-alert v-if="error" type="error" dense class="mb-4">
                 {{ error }}
-                <div v-if="errorHint" class="caption mt-1">
-                  {{ errorHint }}
-                </div>
                 <div v-if="errorCode" class="caption mt-1">
                   Error code: {{ errorCode }}
                 </div>
