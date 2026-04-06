@@ -34,6 +34,12 @@ const router = new VueRouter({
 })
 
 router.beforeEach((to, _from, next) => {
+  const authCode = to.query.code;
+  if (to.path !== '/auth/discord/callback' && typeof authCode === 'string' && authCode) {
+    next({ path: '/auth/discord/callback', query: to.query });
+    return;
+  }
+
   const isDiscordAuthed = !!localStorage.getItem('discordSessionToken');
   if (!isDiscordAuthed && !DISCORD_PUBLIC_PATHS.includes(to.path)) {
     next('/discord-login');

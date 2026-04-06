@@ -1,3 +1,4 @@
+import { apiFetch } from '@/utilities/authFetch';
 const SERVER_BASE_URL =
   process.env.VUE_APP_SERVER_URL || 'https://bar3-server.onrender.com';
 
@@ -31,14 +32,27 @@ export const v2Api = {
   },
 
   async getAutomationState(): Promise<{ enabled: boolean }> {
-    const res = await v2Fetch('/api/v2/automation/state');
-    if (res.status !== 200) throw new Error('Failed to load automation state');
-    return res.json();
+    try {
+      const res = await v2Fetch('/api/v2/automation/state');
+      if (res.status === 200) return res.json();
+      throw new Error('Failed to load automation state');
+    } catch {
+      const fallback = await apiFetch('/api/appData');
+      if (fallback.status !== 200) throw new Error('Failed to load automation state');
+      const data = await fallback.json() as { applicationOn?: boolean };
+      return { enabled: !!data.applicationOn };
+    }
   },
 
   async setAutomationState(enabled: boolean): Promise<void> {
-    const res = await v2Fetch('/api/v2/automation/state', { method: 'POST' }, { enabled });
-    if (res.status !== 204) throw new Error('Failed to update automation state');
+    try {
+      const res = await v2Fetch('/api/v2/automation/state', { method: 'POST' }, { enabled });
+      if (res.status === 204) return;
+      throw new Error('Failed to update automation state');
+    } catch {
+      const fallback = await apiFetch('/api/setApplicationState', { method: 'POST' }, { applicationOn: enabled });
+      if (fallback.status !== 204) throw new Error('Failed to update automation state');
+    }
   },
 
   async upsertTemplate(payload: { subject: string; bodyText?: string; bodyHtml?: string; bodyCss?: string; currentEditor?: number }): Promise<void> {

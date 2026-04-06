@@ -58,16 +58,26 @@ export default class DiscordLogin extends Vue {
   loading = false;
   error = '';
 
-  created() {
+  async created() {
     // If already authenticated, go straight to the app.
     if (discordAuth.isAuthed()) {
       this.$router.replace('/');
+      return;
+    }
+
+    const hasServerSession = await discordAuth.syncServerSession();
+    if (hasServerSession) {
+      this.$store.commit('setDiscordAuthed', true);
+      this.$router.replace('/');
+      return;
     }
 
     // Surface any error message passed as a query param (e.g. from the callback).
     const queryError = this.$route.query.error;
     if (typeof queryError === 'string' && queryError) {
-      this.error = queryError;
+      this.error = queryError === 'role_check_failed'
+        ? 'Role verification is temporarily unavailable. Please try again in a moment.'
+        : queryError;
     }
   }
 
