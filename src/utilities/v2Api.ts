@@ -37,9 +37,15 @@ export const v2Api = {
   async getAutomationState(): Promise<{ enabled: boolean }> {
     try {
       const res = await v2Fetch('/api/v2/automation/state');
+      if (res.status === 401 || res.status === 403) {
+        throw new Error('Unauthorized');
+      }
       if (res.status !== 200) throw new Error('Failed to load automation state');
       return res.json();
     } catch (e) {
+      if (e instanceof Error && e.message === 'Unauthorized') {
+        throw e;
+      }
       console.warn('v2 getAutomationState failed, falling back to legacy endpoint:', e);
       const appData = await getAppData();
       if (!appData) throw new Error('Failed to load automation state via fallback endpoint');

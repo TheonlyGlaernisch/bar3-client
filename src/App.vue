@@ -60,6 +60,13 @@ export default class App extends Vue {
     const authed = await discordAuth.isAuthed();
     this.$store.commit('setDiscordAuthed', authed);
 
+    if (!authed) {
+      // Avoid hitting protected API endpoints with stale local tokens when the
+      // Discord session cookie is not authenticated.
+      localStorage.removeItem('pwSessionToken');
+      return;
+    }
+
     const token = localStorage.getItem('pwSessionToken') || '';
     if (!token) return;
     try {
