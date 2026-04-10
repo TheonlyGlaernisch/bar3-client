@@ -56,10 +56,10 @@ async function graphQlFetch<TData>(query: string, variables?: Record<string, unk
 
 export const v2Api = {
   async loginWithPwApiKey(apiKey: string): Promise<{ token: string; accountId: string }> {
-    const data = await graphQlFetch<{
-      loginWithPwApiKey?: { token: string; accountId: string };
-      login?: { token: string; accountId: string };
-    }>(
+    type LoginPayload = { token: string; accountId: string };
+    type LoginResponse = { loginWithPwApiKey?: LoginPayload; login?: LoginPayload };
+
+    const data: LoginResponse = await graphQlFetch<LoginResponse>(
       `mutation LoginWithPwApiKey($apiKey: String!) {
         loginWithPwApiKey(apiKey: $apiKey) { token accountId }
       }`,
@@ -75,7 +75,8 @@ export const v2Api = {
       if (response.status !== 200) {
         throw error;
       }
-      return { loginWithPwApiKey: await response.json() };
+      const fallbackPayload: LoginPayload = await response.json();
+      return { loginWithPwApiKey: fallbackPayload };
     });
 
     const loginPayload = data.loginWithPwApiKey || data.login;
