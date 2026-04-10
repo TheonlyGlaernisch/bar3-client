@@ -85,5 +85,23 @@ export const v2Api = {
     const res = await v2Fetch('/analytics/v2/me');
     if (res.status !== 200) throw new Error('Failed to load analytics');
     return res.json();
+  },
+
+  async sendActiveUnallied(payload: { dryRun: boolean }): Promise<any> {
+    const res = await v2Fetch('/api/v2/automation/send-active-unallied', { method: 'POST' }, payload);
+    if (res.status !== 200) {
+      const data = await res.json().catch(() => ({} as any));
+      throw new Error(data?.error || 'Failed to send active + unallied messages');
+    }
+    return res.json();
+  },
+
+  async sendActiveUnalliedDiscord(payload: { dryRun: boolean; hasDiscord: boolean }): Promise<any> {
+    const res = await v2Fetch('/api/v2/automation/send-active-unallied-discord', { method: 'POST' }, payload);
+    if (res.status !== 200) {
+      const data = await res.json().catch(() => ({} as any));
+      throw new Error(data?.error || 'Failed to send active + unallied + discord-filtered messages');
+    }
+    return res.json();
   }
 };
