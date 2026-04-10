@@ -29,6 +29,88 @@
       you turn on Bar 3 and send it to new nations. Finally, you can use two variables in your messages. Use <code>\(nation)</code> to substitute the
       nation name, and use <code>\(leader)</code> to substitute the leader name in your messages or subject line.
     </div>
+
+    <v-card outlined class="pa-4 mb-4">
+      <div class="d-flex align-center flex-wrap" style="gap: 12px;">
+        <h3 class="mb-0">Automation Bulk Send</h3>
+        <v-spacer />
+        <v-select
+          dense
+          outlined
+          hide-details
+          class="discord-filter-select"
+          :items="discordFilterOptions"
+          item-text="label"
+          item-value="value"
+          v-model="discordFilterHasDiscord"
+          label="Discord Filter"
+        />
+      </div>
+      <div class="d-flex flex-wrap mt-3" style="gap: 12px;">
+        <v-btn
+          color="primary"
+          :loading="bulkActionLoading === 'unallied'"
+          :disabled="!!bulkActionLoading"
+          @click="runBulkSend('unallied')"
+        >
+          Send to Active (24h) + No Alliance
+        </v-btn>
+        <v-btn
+          color="primary"
+          outlined
+          :loading="bulkActionLoading === 'discord'"
+          :disabled="!!bulkActionLoading"
+          @click="runBulkSend('discord')"
+        >
+          Send to Active (24h) + No Alliance + Discord Filter
+        </v-btn>
+      </div>
+
+      <v-alert
+        v-if="bulkError"
+        type="error"
+        dense
+        outlined
+        class="mt-3 mb-0"
+      >
+        {{ bulkError }}
+      </v-alert>
+
+      <div v-if="bulkPreview" class="mt-4">
+        <h4 class="mb-1">Preview</h4>
+        <div class="grey--text text--lighten-1">
+          {{ bulkPreview.totalCandidates }} candidate{{ bulkPreview.totalCandidates === 1 ? '' : 's' }}
+        </div>
+        <v-list dense class="preview-list mt-2">
+          <v-list-item v-for="(row, idx) in bulkPreviewRows" :key="`preview-${idx}`">
+            <v-list-item-content>
+              <v-list-item-title>{{ row }}</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item v-if="bulkPreviewRows.length === 0">
+            <v-list-item-content>
+              <v-list-item-title class="grey--text">No preview rows returned.</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+      </div>
+
+      <div v-if="bulkResult" class="mt-4">
+        <h4 class="mb-1">Last Send Result</h4>
+        <div>Attempted: {{ bulkResult.attempted }}</div>
+        <div>Sent: {{ bulkResult.sent }}</div>
+        <div>Failed: {{ bulkResult.failed }}</div>
+        <v-list dense v-if="bulkResultFailures.length > 0" class="preview-list mt-2">
+          <v-subheader>Failures (first {{ bulkResultFailures.length }})</v-subheader>
+          <v-list-item v-for="(failure, idx) in bulkResultFailures" :key="`failure-${idx}`">
+            <v-list-item-content>
+              <v-list-item-title>{{ failure }}</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+      </div>
+    </v-card>
+
     <v-tabs v-model="editorTab" class="mt-2" style="margin-bottom: 200px" @change="changes()">
       <v-tab>
         Basic Editor
@@ -98,6 +180,30 @@
     saveChangesOpen = false;
     error = false;
     testDialog = false;
+    bulkActionLoading: null | 'unallied' | 'discord' = null;
+    discordFilterHasDiscord = true;
+    bulkPreview: null | { totalCandidates: number; previewRows: any[] } = null;
+    bulkResult: null | { attempted: number; sent: number; failed: number; failures: any[] } = null;
+    bulkError = '';
+
+    get discordFilterOptions() {
+      return [
+        { label: 'Has Discord', value: true },
+        { label: 'No Discord', value: false },
+      ];
+    }
+
+    get bulkPreviewRows(): string[] {
+      return (this.bulkPreview?.previewRows || []).slice(0, 15).map((row: any) => this.formatNationRow(row));
+    }
+
+    get bulkResultFailures(): string[] {
+      return (this.bulkResult?.failures || []).slice(0, 5).map((row: any) => {
+        const nation = row?.nation || row?.nationName || row?.leader || row?.id || 'Unknown nation';
+        const error = row?.error || row?.reason || 'Unknown error';
+        return `${nation}: ${error}`;
+      });
+    }
 
     async mounted() {
       const config = await getConfig();
@@ -186,6 +292,66 @@
       const success = await sendMessage((this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced, nationDetails); 
       if (!success) alert('Couldn\'t send your message!');
     }
+
+    formatNationRow(row: any): string {
+      if (!row || typeof row !== 'object') return String(row);
+      const nation = row.nation || row.nationName || row.name || row.nation_id || row.id;
+      const leader = row.leader || row.leaderName;
+      const discord = row.discord || row.hasDiscord;
+      const pieces = [nation ? `Nation: ${nation}` : '', leader ? `Leader: ${leader}` : ''].filter(Boolean);
+      if (discord !== undefined && discord !== null) {
+        pieces.push(`Discord: ${discord ? 'Yes' : 'No'}`);
+      }
+      return pieces.length > 0 ? pieces.join(' | ') : JSON.stringify(row);
+    }
+
+    normalizePreview(data: any): { totalCandidates: number; previewRows: any[] } {
+      const previewRows = data?.preview || data?.candidates || data?.rows || [];
+      const totalCandidates = Number(data?.totalCandidates ?? previewRows.length ?? 0);
+      return {
+        totalCandidates,
+        previewRows: Array.isArray(previewRows) ? previewRows : [],
+      };
+    }
+
+    normalizeResult(data: any): { attempted: number; sent: number; failed: number; failures: any[] } {
+      return {
+        attempted: Number(data?.attempted || 0),
+        sent: Number(data?.sent || 0),
+        failed: Number(data?.failed || 0),
+        failures: Array.isArray(data?.failures) ? data.failures : [],
+      };
+    }
+
+    async runBulkSend(mode: 'unallied' | 'discord') {
+      this.bulkActionLoading = mode;
+      this.bulkResult = null;
+      this.bulkError = '';
+      try {
+        const previewResponse = mode === 'unallied'
+          ? await v2Api.sendActiveUnallied({ dryRun: true })
+          : await v2Api.sendActiveUnalliedDiscord({ dryRun: true, hasDiscord: this.discordFilterHasDiscord });
+
+        this.bulkPreview = this.normalizePreview(previewResponse);
+        const confirmed = window.confirm(`Send to ${this.bulkPreview.totalCandidates} nations?`);
+        if (!confirmed) return;
+
+        const sendResponse = mode === 'unallied'
+          ? await v2Api.sendActiveUnallied({ dryRun: false })
+          : await v2Api.sendActiveUnalliedDiscord({ dryRun: false, hasDiscord: this.discordFilterHasDiscord });
+
+        this.bulkResult = this.normalizeResult(sendResponse);
+      } catch (e) {
+        const message = typeof e === 'object' && e !== null && 'message' in e ? (e as any).message : 'Request failed';
+        if (message.includes('Failed to fetch target nations from Politics & War API')) {
+          this.bulkError = 'Failed to fetch target nations from Politics & War API. Please retry in a moment. If this persists, contact the server admin to verify backend Politics & War lookup configuration.';
+        } else {
+          this.bulkError = message;
+        }
+      } finally {
+        this.bulkActionLoading = null;
+      }
+    }
   }
 </script>
 
@@ -204,6 +370,20 @@
       left: 10px;
     }
   }
+</style>
+
+<style scoped>
+.discord-filter-select {
+  max-width: 260px;
+  min-width: 220px;
+}
+
+.preview-list {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
 </style>
 
 <style>
