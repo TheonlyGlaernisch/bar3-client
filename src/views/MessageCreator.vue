@@ -66,6 +66,16 @@
         </v-btn>
       </div>
 
+      <v-alert
+        v-if="bulkError"
+        type="error"
+        dense
+        outlined
+        class="mt-3 mb-0"
+      >
+        {{ bulkError }}
+      </v-alert>
+
       <div v-if="bulkPreview" class="mt-4">
         <h4 class="mb-1">Preview</h4>
         <div class="grey--text text--lighten-1">
@@ -174,6 +184,7 @@
     discordFilterHasDiscord = true;
     bulkPreview: null | { totalCandidates: number; previewRows: any[] } = null;
     bulkResult: null | { attempted: number; sent: number; failed: number; failures: any[] } = null;
+    bulkError = '';
 
     get discordFilterOptions() {
       return [
@@ -315,6 +326,7 @@
     async runBulkSend(mode: 'unallied' | 'discord') {
       this.bulkActionLoading = mode;
       this.bulkResult = null;
+      this.bulkError = '';
       try {
         const previewResponse = mode === 'unallied'
           ? await v2Api.sendActiveUnallied({ dryRun: true })
@@ -331,7 +343,11 @@
         this.bulkResult = this.normalizeResult(sendResponse);
       } catch (e) {
         const message = typeof e === 'object' && e !== null && 'message' in e ? (e as any).message : 'Request failed';
-        alert(message);
+        if (message.includes('Failed to fetch target nations from Politics & War API')) {
+          this.bulkError = 'Failed to fetch target nations from Politics & War API. Please retry in a moment. If this persists, contact the server admin to verify backend Politics & War lookup configuration.';
+        } else {
+          this.bulkError = message;
+        }
       } finally {
         this.bulkActionLoading = null;
       }
