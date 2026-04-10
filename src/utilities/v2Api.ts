@@ -85,5 +85,29 @@ export const v2Api = {
     const res = await v2Fetch('/analytics/v2/me');
     if (res.status !== 200) throw new Error('Failed to load analytics');
     return res.json();
+  },
+
+  async sendActiveUnallied(payload: { dryRun: boolean; minCities?: number; maxCities?: number }): Promise<any> {
+    const res = await v2Fetch('/api/v2/automation/send-active-unallied', { method: 'POST' }, payload);
+    if (res.status === 401 || res.status === 403) {
+      throw new Error('Unauthorized: please log in from Account with your Politics & War API key.');
+    }
+    if (res.status !== 200) {
+      const data = await res.json().catch(() => ({} as any));
+      throw new Error(data?.error || 'Failed to send active + unallied messages');
+    }
+    return res.json();
+  },
+
+  async sendActiveUnalliedDiscord(payload: { dryRun: boolean; hasDiscord: boolean; minCities?: number; maxCities?: number }): Promise<any> {
+    const res = await v2Fetch('/api/v2/automation/send-active-unallied-discord', { method: 'POST' }, payload);
+    if (res.status === 401 || res.status === 403) {
+      throw new Error('Unauthorized: please log in from Account with your Politics & War API key.');
+    }
+    if (res.status !== 200) {
+      const data = await res.json().catch(() => ({} as any));
+      throw new Error(data?.error || 'Failed to send active + unallied + discord-filtered messages');
+    }
+    return res.json();
   }
 };
