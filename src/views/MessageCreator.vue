@@ -34,6 +34,26 @@
       <div class="d-flex align-center flex-wrap" style="gap: 12px;">
         <h3 class="mb-0">Automation Bulk Send</h3>
         <v-spacer />
+        <v-text-field
+          dense
+          outlined
+          hide-details
+          class="city-filter-input"
+          type="number"
+          min="0"
+          v-model.number="minCities"
+          label="Min Cities"
+        />
+        <v-text-field
+          dense
+          outlined
+          hide-details
+          class="city-filter-input"
+          type="number"
+          min="0"
+          v-model.number="maxCities"
+          label="Max Cities"
+        />
         <v-select
           dense
           outlined
@@ -182,6 +202,8 @@
     testDialog = false;
     bulkActionLoading: null | 'unallied' | 'discord' = null;
     discordFilterHasDiscord = true;
+    minCities: number | null = null;
+    maxCities: number | null = null;
     bulkPreview: null | { totalCandidates: number; previewRows: any[] } = null;
     bulkResult: null | { attempted: number; sent: number; failed: number; failures: any[] } = null;
     bulkError = '';
@@ -298,7 +320,11 @@
       const nation = row.nation || row.nationName || row.name || row.nation_id || row.id;
       const leader = row.leader || row.leaderName;
       const discord = row.discord || row.hasDiscord;
+      const cities = row.cities;
       const pieces = [nation ? `Nation: ${nation}` : '', leader ? `Leader: ${leader}` : ''].filter(Boolean);
+      if (typeof cities === 'number') {
+        pieces.push(`Cities: ${cities}`);
+      }
       if (discord !== undefined && discord !== null) {
         pieces.push(`Discord: ${discord ? 'Yes' : 'No'}`);
       }
@@ -323,22 +349,54 @@
       };
     }
 
+    getCityPayload(): { minCities?: number; maxCities?: number } {
+      const payload: { minCities?: number; maxCities?: number } = {};
+      if (typeof this.minCities === 'number' && Number.isFinite(this.minCities)) {
+        payload.minCities = this.minCities;
+      }
+      if (typeof this.maxCities === 'number' && Number.isFinite(this.maxCities)) {
+        payload.maxCities = this.maxCities;
+      }
+      return payload;
+    }
+
+    hasValidCityRange(): boolean {
+      if (typeof this.minCities === 'number' && this.minCities < 0) return false;
+      if (typeof this.maxCities === 'number' && this.maxCities < 0) return false;
+      if (typeof this.minCities === 'number' && typeof this.maxCities === 'number' && this.minCities > this.maxCities) {
+        return false;
+      }
+      return true;
+    }
+
     async runBulkSend(mode: 'unallied' | 'discord') {
       this.bulkActionLoading = mode;
       this.bulkResult = null;
       this.bulkError = '';
       try {
+        if (!localStorage.getItem('pwSessionToken')) {
+          this.bulkError = 'Unauthorized: please log in from Account with your Politics & War API key.';
+          return;
+        }
+
+        if (!this.hasValidCityRange()) {
+          this.bulkError = 'Invalid city filter. Ensure min/max are >= 0 and min is not greater than max.';
+          return;
+        }
+
+        const cityPayload = this.getCityPayload();
+
         const previewResponse = mode === 'unallied'
-          ? await v2Api.sendActiveUnallied({ dryRun: true })
-          : await v2Api.sendActiveUnalliedDiscord({ dryRun: true, hasDiscord: this.discordFilterHasDiscord });
+          ? await v2Api.sendActiveUnallied({ dryRun: true, ...cityPayload })
+          : await v2Api.sendActiveUnalliedDiscord({ dryRun: true, hasDiscord: this.discordFilterHasDiscord, ...cityPayload });
 
         this.bulkPreview = this.normalizePreview(previewResponse);
         const confirmed = window.confirm(`Send to ${this.bulkPreview.totalCandidates} nations?`);
         if (!confirmed) return;
 
         const sendResponse = mode === 'unallied'
-          ? await v2Api.sendActiveUnallied({ dryRun: false })
-          : await v2Api.sendActiveUnalliedDiscord({ dryRun: false, hasDiscord: this.discordFilterHasDiscord });
+          ? await v2Api.sendActiveUnallied({ dryRun: false, ...cityPayload })
+          : await v2Api.sendActiveUnalliedDiscord({ dryRun: false, hasDiscord: this.discordFilterHasDiscord, ...cityPayload });
 
         this.bulkResult = this.normalizeResult(sendResponse);
       } catch (e) {
@@ -376,6 +434,10 @@
 .discord-filter-select {
   max-width: 260px;
   min-width: 220px;
+}
+
+.city-filter-input {
+  max-width: 150px;
 }
 
 .preview-list {
