@@ -393,8 +393,21 @@
           this.bulkError = 'Invalid city filter. Ensure min/max are >= 0 and min is not greater than max.';
           return;
         }
-
-        const cityPayload = this.getCityPayload();
+                showConfirmDialog(message: string): Promise<boolean> {
+          return new Promise((resolve) => {
+            this.confirmDialogMessage = message;
+            this.confirmDialogResolve = resolve;
+            this.confirmDialogOpen = true;
+          });
+        }
+        
+        handleConfirmDialogResponse(confirmed: boolean) {
+          if (this.confirmDialogResolve) {
+            this.confirmDialogResolve(confirmed);
+            this.confirmDialogResolve = null;
+          }
+        }
+                const cityPayload = this.getCityPayload();
 
         const previewResponse = mode === 'unallied'
           ? await v2Api.sendActiveUnallied({ dryRun: true, ...cityPayload })
