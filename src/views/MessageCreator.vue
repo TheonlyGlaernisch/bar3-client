@@ -160,6 +160,11 @@
       @save="save($event)"
     />
     <test-message-dialog v-model="testDialog" @send="testMessage($event)"/>
+    <confirm-dialog
+  v-model="confirmDialogOpen"
+  :message="confirmDialogMessage"
+  @confirm="handleConfirmDialogResponse"
+/>
   </div>
 </template>
 
