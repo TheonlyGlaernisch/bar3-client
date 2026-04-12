@@ -392,7 +392,7 @@
     if (!this.hasValidCityRange()) {
       this.bulkError = 'Invalid city filter. Ensure min/max are >= 0 and min is not greater than max.';
       return;
-    }
+    },
     showConfirmDialog(message: string): Promise<boolean> {
       return new Promise((resolve) => {
         this.confirmDialogMessage = message;
