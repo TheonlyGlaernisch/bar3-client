@@ -175,6 +175,7 @@
   import sendMessage from '@/actions/sendMessage';
   import UpdateAvailableBanner from '@/components/UpdateAvailableBanner.vue';
   import { v2Api } from '@/utilities/v2Api';
+  import ConfirmDialog from '@/components/ConfirmDialog.vue';
   
   @Component({
     components: {
