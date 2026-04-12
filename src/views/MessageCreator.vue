@@ -178,14 +178,15 @@
   import ConfirmDialog from '@/components/ConfirmDialog.vue';
   
   @Component({
-    components: {
-      MessageCreator,
-      AdvancedMessageCreator,
-      SavedChangesCard,
-      TestMessageDialog,
-      UpdateAvailableBanner
-    }
-  })
+  components: {
+    MessageCreator,
+    AdvancedMessageCreator,
+    SavedChangesCard,
+    TestMessageDialog,
+    UpdateAvailableBanner,
+    ConfirmDialog  // Add this line
+  }
+})
   export default class MessageDesigner extends Vue {
     config: Config = new DefaultConfig();
     messageHTML = {
@@ -208,6 +209,9 @@
     bulkPreview: null | { totalCandidates: number; previewRows: any[] } = null;
     bulkResult: null | { attempted: number; sent: number; failed: number; failures: any[] } = null;
     bulkError = '';
+    confirmDialogOpen = false;
+    confirmDialogMessage = '';
+    confirmDialogResolve: ((value: boolean) => void) | null = null;
 
     get discordFilterOptions() {
       return [
@@ -392,7 +396,7 @@
           : await v2Api.sendActiveUnalliedDiscord({ dryRun: true, hasDiscord: this.discordFilterHasDiscord, ...cityPayload });
 
         this.bulkPreview = this.normalizePreview(previewResponse);
-        const confirmed = window.confirm(`Send to ${this.bulkPreview.totalCandidates} nations?`);
+        const confirmed = await this.showConfirmDialog(`Send to ${this.bulkPreview.totalCandidates} nations?`);
         if (!confirmed) return;
 
         const sendResponse = mode === 'unallied'
