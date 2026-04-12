@@ -394,22 +394,7 @@
       return;
     }
     const cityPayload = this.getCityPayload();
-    showConfirmDialog(message: string): Promise<boolean> {
-      return new Promise((resolve) => {
-        this.confirmDialogMessage = message;
-        this.confirmDialogResolve = resolve;
-        this.confirmDialogOpen = true;
-      });
-    }
-      
-    handleConfirmDialogResponse(confirmed: boolean) {
-      if (this.confirmDialogResolve) {
-        this.confirmDialogResolve(confirmed);
-        this.confirmDialogResolve = null;
-      }
-    }
-
-        const previewResponse = mode === 'unallied'
+            const previewResponse = mode === 'unallied'
           ? await v2Api.sendActiveUnallied({ dryRun: true, ...cityPayload })
           : await v2Api.sendActiveUnalliedDiscord({ dryRun: true, hasDiscord: this.discordFilterHasDiscord, ...cityPayload });
 
@@ -433,6 +418,23 @@
         this.bulkActionLoading = null;
       }
     }
+    showConfirmDialog(message: string): Promise<boolean> {
+      return new Promise((resolve) => {
+        this.confirmDialogMessage = message;
+        this.confirmDialogResolve = resolve;
+        this.confirmDialogOpen = true;
+      });
+    }
+      
+    handleConfirmDialogResponse(confirmed: boolean) {
+      if (this.confirmDialogResolve) {
+        this.confirmDialogResolve(confirmed);
+        this.confirmDialogResolve = null;
+      }
+    }
+
+
+    
   }
 </script>
 
