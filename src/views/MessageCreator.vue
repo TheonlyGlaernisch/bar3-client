@@ -456,7 +456,7 @@
 
     parseNationIds(): number[] {
       return this.nationIdsInput
-        .split(',')
+        .split(/[,\n\r\t ]+/)
         .map((value) => Number(value.trim()))
         .filter((value) => Number.isInteger(value) && value > 0);
     }
@@ -477,13 +477,14 @@
           return;
         }
 
-        const previewResponse = await v2Api.sendByNationIds({ dryRun: true, nationIds });
+        const nationIdsCsv = nationIds.join(',');
+        const previewResponse = await v2Api.sendByNationIds({ dryRun: true, nationIds: nationIdsCsv });
         this.bulkPreview = this.normalizePreview(previewResponse);
 
         const confirmed = await this.showConfirmDialog(`Send to ${this.bulkPreview.totalCandidates} nations?`);
         if (!confirmed) return;
 
-        const sendResponse = await v2Api.sendByNationIds({ dryRun: false, nationIds });
+        const sendResponse = await v2Api.sendByNationIds({ dryRun: false, nationIds: nationIdsCsv });
         this.bulkResult = this.normalizeResult(sendResponse);
       } catch (e) {
         const message = typeof e === 'object' && e !== null && 'message' in e ? (e as any).message : 'Request failed';

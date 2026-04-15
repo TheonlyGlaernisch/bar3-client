@@ -111,7 +111,7 @@ export const v2Api = {
     return res.json();
   },
 
-  async sendByNationIds(payload: { dryRun: boolean; nationIds: number[] }): Promise<any> {
+  async sendByNationIds(payload: { dryRun: boolean; nationIds: string | number[] }): Promise<any> {
     const res = await v2Fetch('/api/v2/automation/send-by-nation-ids', { method: 'POST' }, payload);
     if (res.status === 401 || res.status === 403) {
       throw new Error('Unauthorized: please log in from Account with your Politics & War API key.');
