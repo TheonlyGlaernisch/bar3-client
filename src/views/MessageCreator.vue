@@ -3,8 +3,9 @@
 <template>
   <div class="view-small-inner-wrapper view-padding-inner-wrapper">
     <div class="d-flex align-center mb-4">
-      <h1 class="">Message Creator</h1>
+      <h1 class="">{{ isAutomationPage ? 'Automation' : 'Message Creator' }}</h1>
       <v-btn
+        v-if="!isAutomationPage"
         outlined
         color="primary"
         class="ml-auto"
@@ -15,6 +16,7 @@
     </div>
     <update-available-banner/>
     <v-text-field
+      v-if="!isAutomationPage"
       dense
       outlined
       placeholder="Subject Line"
@@ -23,17 +25,16 @@
       @change="changes()"
       class="mt-4 mb-4"
     />
-    <div class="mt-2 mb-2">
+    <div v-if="!isAutomationPage" class="mt-2 mb-2">
       The editor allows you to easily create your own custom message. You can either choose between the Basic Editor with WYSIWYG controls,
       or the advanced editor with HTML and CSS. With both editors it is recommended you use the test button to try out sending a message before
       you turn on Bar 3 and send it to new nations. Finally, you can use two variables in your messages. Use <code>\(nation)</code> to substitute the
       nation name, and use <code>\(leader)</code> to substitute the leader name in your messages or subject line.
     </div>
 
-    <v-card outlined class="pa-4 mb-4">
+    <v-card v-if="isAutomationPage" outlined class="pa-4 mt-4 mb-4">
+      <h3 class="mb-3">Automation Bulk Send</h3>
       <div class="d-flex align-center flex-wrap" style="gap: 12px;">
-        <h3 class="mb-0">Automation Bulk Send</h3>
-        <v-spacer />
         <v-text-field
           dense
           outlined
@@ -66,6 +67,7 @@
           label="Discord Filter"
         />
       </div>
+
       <div class="d-flex flex-wrap mt-3" style="gap: 12px;">
         <v-btn
           color="primary"
@@ -85,6 +87,28 @@
           Send to Active (24h) + No Alliance + Discord Filter
         </v-btn>
       </div>
+
+      <v-divider class="my-4" />
+
+      <h3 class="mb-3">Send by Nation IDs</h3>
+      <v-text-field
+        dense
+        outlined
+        v-model="nationIdsInput"
+        label="Nation IDs (comma-separated)"
+        placeholder="12345, 67890, 11223"
+        hint="Enter one or more nation IDs separated by commas."
+        persistent-hint
+      />
+      <v-btn
+        color="primary"
+        class="mt-2"
+        :loading="bulkActionLoading === 'nation-ids'"
+        :disabled="!!bulkActionLoading"
+        @click="runNationIdSend()"
+      >
+        Send
+      </v-btn>
 
       <v-alert
         v-if="bulkError"
@@ -131,11 +155,18 @@
       </div>
     </v-card>
 
-    <v-tabs v-model="editorTab" class="mt-2" style="margin-bottom: 200px" @change="changes()">
-      <v-tab>
+    <div v-else class="editor-tabs-wrapper mt-2" style="margin-bottom: 200px">
+      <v-tabs
+        v-model="editorTab"
+        class="editor-tabs"
+        :vertical="$vuetify.breakpoint.mdAndUp"
+        show-arrows
+        @change="changes()"
+      >
+      <v-tab class="editor-tab">
         Basic Editor
       </v-tab>
-      <v-tab>
+      <v-tab class="editor-tab">
         Advanced Editor
       </v-tab>
 
@@ -155,7 +186,9 @@
         />
       </v-tab-item>
     </v-tabs>
+    </div>
     <saved-changes-card
+      v-if="!isAutomationPage"
       v-model="saveChangesOpen"
       @save="save($event)"
     />
@@ -169,7 +202,7 @@
 </template>
 
 <script lang="ts">
-  import {Component, Vue} from 'vue-property-decorator';
+  import {Component, Vue, Watch} from 'vue-property-decorator';
   import getConfig from '@/actions/getConfig';
   import sendConfig from '@/actions/sendConfig';
   import { Config, DefaultConfig } from '@/types';
@@ -207,8 +240,9 @@
     saveChangesOpen = false;
     error = false;
     testDialog = false;
-    bulkActionLoading: null | 'unallied' | 'discord' = null;
+    bulkActionLoading: null | 'unallied' | 'discord' | 'nation-ids' = null;
     discordFilterHasDiscord = true;
+    nationIdsInput = '';
     minCities: number | null = null;
     maxCities: number | null = null;
     bulkPreview: null | { totalCandidates: number; previewRows: any[] } = null;
@@ -237,6 +271,10 @@
       });
     }
 
+    get isAutomationPage(): boolean {
+      return this.$route.path === '/automation';
+    }
+
     async mounted() {
       const config = await getConfig();
       if (config && !(config instanceof Error)) {
@@ -252,7 +290,22 @@
       }
     }
 
+    @Watch('$route.path')
+    onRoutePathChanged() {
+      if (this.isAutomationPage) {
+        this.saveChangesOpen = false;
+        return;
+      }
+      this.editorTab = this.config.currentEditor || 0;
+      this.changes();
+    }
+
     changes() {
+      if (this.isAutomationPage) {
+        this.saveChangesOpen = false;
+        return;
+      }
+
       if (this.editorTab == 0 && this.messageHTML.quill != this.config.messageHTML) {
         this.saveChangesOpen = true;
         return;
@@ -418,6 +471,46 @@
         this.bulkActionLoading = null;
       }
     }
+
+    parseNationIds(): number[] {
+      return this.nationIdsInput
+        .split(/[,\n\r\t ]+/)
+        .map((value) => Number(value.trim()))
+        .filter((value) => Number.isInteger(value) && value > 0);
+    }
+
+    async runNationIdSend() {
+      this.bulkActionLoading = 'nation-ids';
+      this.bulkResult = null;
+      this.bulkError = '';
+      try {
+        if (!localStorage.getItem('pwSessionToken')) {
+          this.bulkError = 'Unauthorized: please log in from Account with your Politics & War API key.';
+          return;
+        }
+
+        const nationIds = this.parseNationIds();
+        if (nationIds.length === 0) {
+          this.bulkError = 'Enter at least one valid nation ID separated by commas.';
+          return;
+        }
+
+        const nationIdsCsv = nationIds.join(',');
+        const previewResponse = await v2Api.sendByNationIds({ dryRun: true, nationIds: nationIdsCsv });
+        this.bulkPreview = this.normalizePreview(previewResponse);
+
+        const confirmed = await this.showConfirmDialog(`Send to ${this.bulkPreview.totalCandidates} nations?`);
+        if (!confirmed) return;
+
+        const sendResponse = await v2Api.sendByNationIds({ dryRun: false, nationIds: nationIdsCsv });
+        this.bulkResult = this.normalizeResult(sendResponse);
+      } catch (e) {
+        const message = typeof e === 'object' && e !== null && 'message' in e ? (e as any).message : 'Request failed';
+        this.bulkError = message;
+      } finally {
+        this.bulkActionLoading = null;
+      }
+    }
     showConfirmDialog(message: string): Promise<boolean> {
       return new Promise((resolve) => {
         this.confirmDialogMessage = message;
@@ -470,6 +563,27 @@
   overflow-y: auto;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
+}
+
+.editor-tabs-wrapper {
+  width: 100%;
+}
+
+.editor-tabs {
+  width: 100%;
+}
+
+@media only screen and (max-width: 959px) {
+  .editor-tabs ::v-deep .v-slide-group__wrapper {
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .editor-tabs ::v-deep .v-tab {
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
 }
 </style>
 

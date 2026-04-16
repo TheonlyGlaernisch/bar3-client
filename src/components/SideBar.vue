@@ -98,6 +98,11 @@ import Vue from 'vue';
     path: '/dashboard',
   },
   {
+    title: 'Automation',
+    icon: 'mdi-robot-outline',
+    path: '/automation',
+  },
+  {
     title: 'Configuration',
     icon: 'mdi-cog',
     path: '/config',
