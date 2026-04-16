@@ -30,115 +30,148 @@
       nation name, and use <code>\(leader)</code> to substitute the leader name in your messages or subject line.
     </div>
 
-    <v-card outlined class="pa-4 mb-4">
-      <div class="d-flex align-center flex-wrap" style="gap: 12px;">
-        <h3 class="mb-0">Automation Bulk Send</h3>
-        <v-spacer />
-        <v-text-field
-          dense
-          outlined
-          hide-details
-          class="city-filter-input"
-          type="number"
-          min="0"
-          v-model.number="minCities"
-          label="Min Cities"
-        />
-        <v-text-field
-          dense
-          outlined
-          hide-details
-          class="city-filter-input"
-          type="number"
-          min="0"
-          v-model.number="maxCities"
-          label="Max Cities"
-        />
-        <v-select
-          dense
-          outlined
-          hide-details
-          class="discord-filter-select"
-          :items="discordFilterOptions"
-          item-text="label"
-          item-value="value"
-          v-model="discordFilterHasDiscord"
-          label="Discord Filter"
-        />
-      </div>
-      <div class="d-flex flex-wrap mt-3" style="gap: 12px;">
-        <v-btn
-          color="primary"
-          :loading="bulkActionLoading === 'unallied'"
-          :disabled="!!bulkActionLoading"
-          @click="runBulkSend('unallied')"
-        >
-          Send to Active (24h) + No Alliance
-        </v-btn>
-        <v-btn
-          color="primary"
-          outlined
-          :loading="bulkActionLoading === 'discord'"
-          :disabled="!!bulkActionLoading"
-          @click="runBulkSend('discord')"
-        >
-          Send to Active (24h) + No Alliance + Discord Filter
-        </v-btn>
-      </div>
-
-      <v-alert
-        v-if="bulkError"
-        type="error"
-        dense
-        outlined
-        class="mt-3 mb-0"
+    <div class="editor-tabs-wrapper mt-2" style="margin-bottom: 200px">
+      <v-tabs
+        v-model="editorTab"
+        class="editor-tabs"
+        :vertical="$vuetify.breakpoint.mdAndUp"
+        show-arrows
+        @change="changes()"
       >
-        {{ bulkError }}
-      </v-alert>
-
-      <div v-if="bulkPreview" class="mt-4">
-        <h4 class="mb-1">Preview</h4>
-        <div class="grey--text text--lighten-1">
-          {{ bulkPreview.totalCandidates }} candidate{{ bulkPreview.totalCandidates === 1 ? '' : 's' }}
-        </div>
-        <v-list dense class="preview-list mt-2">
-          <v-list-item v-for="(row, idx) in bulkPreviewRows" :key="`preview-${idx}`">
-            <v-list-item-content>
-              <v-list-item-title>{{ row }}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-          <v-list-item v-if="bulkPreviewRows.length === 0">
-            <v-list-item-content>
-              <v-list-item-title class="grey--text">No preview rows returned.</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
-      </div>
-
-      <div v-if="bulkResult" class="mt-4">
-        <h4 class="mb-1">Last Send Result</h4>
-        <div>Attempted: {{ bulkResult.attempted }}</div>
-        <div>Sent: {{ bulkResult.sent }}</div>
-        <div>Failed: {{ bulkResult.failed }}</div>
-        <v-list dense v-if="bulkResultFailures.length > 0" class="preview-list mt-2">
-          <v-subheader>Failures (first {{ bulkResultFailures.length }})</v-subheader>
-          <v-list-item v-for="(failure, idx) in bulkResultFailures" :key="`failure-${idx}`">
-            <v-list-item-content>
-              <v-list-item-title>{{ failure }}</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
-      </div>
-    </v-card>
-
-    <v-tabs v-model="editorTab" class="mt-2" style="margin-bottom: 200px" @change="changes()">
-      <v-tab>
+      <v-tab class="editor-tab">
+        Automation
+      </v-tab>
+      <v-tab class="editor-tab">
         Basic Editor
       </v-tab>
-      <v-tab>
+      <v-tab class="editor-tab">
         Advanced Editor
       </v-tab>
 
+      <v-tab-item class="mt-2">
+      <div class="pa-2">
+        <h3 class="mb-3">Automation Bulk Send</h3>
+        <div class="d-flex align-center flex-wrap" style="gap: 12px;">
+          <v-text-field
+            dense
+            outlined
+            hide-details
+            class="city-filter-input"
+            type="number"
+            min="0"
+            v-model.number="minCities"
+            label="Min Cities"
+          />
+          <v-text-field
+            dense
+            outlined
+            hide-details
+            class="city-filter-input"
+            type="number"
+            min="0"
+            v-model.number="maxCities"
+            label="Max Cities"
+          />
+          <v-select
+            dense
+            outlined
+            hide-details
+            class="discord-filter-select"
+            :items="discordFilterOptions"
+            item-text="label"
+            item-value="value"
+            v-model="discordFilterHasDiscord"
+            label="Discord Filter"
+          />
+        </div>
+
+        <div class="d-flex flex-wrap mt-3" style="gap: 12px;">
+          <v-btn
+            color="primary"
+            :loading="bulkActionLoading === 'unallied'"
+            :disabled="!!bulkActionLoading"
+            @click="runBulkSend('unallied')"
+          >
+            Send to Active (24h) + No Alliance
+          </v-btn>
+          <v-btn
+            color="primary"
+            outlined
+            :loading="bulkActionLoading === 'discord'"
+            :disabled="!!bulkActionLoading"
+            @click="runBulkSend('discord')"
+          >
+            Send to Active (24h) + No Alliance + Discord Filter
+          </v-btn>
+        </div>
+
+        <v-divider class="my-4" />
+
+        <h3 class="mb-3">Send by Nation IDs</h3>
+        <v-text-field
+          dense
+          outlined
+          v-model="nationIdsInput"
+          label="Nation IDs (comma-separated)"
+          placeholder="12345, 67890, 11223"
+          hint="Enter one or more nation IDs separated by commas."
+          persistent-hint
+        />
+        <v-btn
+          color="primary"
+          class="mt-2"
+          :loading="bulkActionLoading === 'nation-ids'"
+          :disabled="!!bulkActionLoading"
+          @click="runNationIdSend()"
+        >
+          Send
+        </v-btn>
+
+        <v-alert
+          v-if="bulkError"
+          type="error"
+          dense
+          outlined
+          class="mt-3 mb-0"
+        >
+          {{ bulkError }}
+        </v-alert>
+
+        <div v-if="bulkPreview" class="mt-4">
+          <h4 class="mb-1">Preview</h4>
+          <div class="grey--text text--lighten-1">
+            {{ bulkPreview.totalCandidates }} candidate{{ bulkPreview.totalCandidates === 1 ? '' : 's' }}
+          </div>
+          <v-list dense class="preview-list mt-2">
+            <v-list-item v-for="(row, idx) in bulkPreviewRows" :key="`preview-${idx}`">
+              <v-list-item-content>
+                <v-list-item-title>{{ row }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item v-if="bulkPreviewRows.length === 0">
+              <v-list-item-content>
+                <v-list-item-title class="grey--text">No preview rows returned.</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </div>
+
+        <div v-if="bulkResult" class="mt-4">
+          <h4 class="mb-1">Last Send Result</h4>
+          <div>Attempted: {{ bulkResult.attempted }}</div>
+          <div>Sent: {{ bulkResult.sent }}</div>
+          <div>Failed: {{ bulkResult.failed }}</div>
+          <v-list dense v-if="bulkResultFailures.length > 0" class="preview-list mt-2">
+            <v-subheader>Failures (first {{ bulkResultFailures.length }})</v-subheader>
+            <v-list-item v-for="(failure, idx) in bulkResultFailures" :key="`failure-${idx}`">
+              <v-list-item-content>
+                <v-list-item-title>{{ failure }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </div>
+      </div>
+      </v-tab-item>
       <v-tab-item class="mt-2">
         <message-creator 
           @change="messageHTML.quill = $event; changes()" 
@@ -155,6 +188,7 @@
         />
       </v-tab-item>
     </v-tabs>
+    </div>
     <saved-changes-card
       v-model="saveChangesOpen"
       @save="save($event)"
@@ -207,8 +241,9 @@
     saveChangesOpen = false;
     error = false;
     testDialog = false;
-    bulkActionLoading: null | 'unallied' | 'discord' = null;
+    bulkActionLoading: null | 'unallied' | 'discord' | 'nation-ids' = null;
     discordFilterHasDiscord = true;
+    nationIdsInput = '';
     minCities: number | null = null;
     maxCities: number | null = null;
     bulkPreview: null | { totalCandidates: number; previewRows: any[] } = null;
@@ -245,7 +280,7 @@
         this.messageHTML.quill = config.messageHTML || '';
         this.subject = config.messageSubject || '';
         this.config = config;
-        this.editorTab = config.currentEditor || 0;
+        this.editorTab = (config.currentEditor || 0) + 1;
         this.changes();
       } else {
         alert('Couldn\'t retrieve your config!');
@@ -253,10 +288,12 @@
     }
 
     changes() {
-      if (this.editorTab == 0 && this.messageHTML.quill != this.config.messageHTML) {
+      const selectedEditor = this.editorTab === 2 ? 1 : 0;
+
+      if (this.editorTab == 1 && this.messageHTML.quill != this.config.messageHTML) {
         this.saveChangesOpen = true;
         return;
-      } else if (this.editorTab == 1 && (
+      } else if (this.editorTab == 2 && (
         this.advancedRaw.html != (this.config.advancedRaw && this.config.advancedRaw.html) ||
         this.advancedRaw.css != (this.config.advancedRaw && this.config.advancedRaw.css)
       )) {
@@ -265,7 +302,7 @@
       } else if (this.subject != this.config.messageSubject) {
         this.saveChangesOpen = true;
         return;
-      } else if (this.editorTab != this.config.currentEditor) {
+      } else if (this.editorTab !== 0 && selectedEditor != this.config.currentEditor) {
         this.saveChangesOpen = true;
         return;
       }
@@ -281,14 +318,15 @@
 
       const token = localStorage.getItem('pwSessionToken') || '';
 
+      const selectedEditor = this.editorTab === 2 ? 1 : 0;
       const newConfig = {
         messageSubject: this.subject,
-        messageHTML: (this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
+        messageHTML: (selectedEditor == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
         advancedRaw: {
           html: this.advancedRaw.html,
           css: this.advancedRaw.css,
         },
-        currentEditor: this.editorTab,
+        currentEditor: selectedEditor,
       };
 
       const res = await sendConfig(newConfig);
@@ -310,10 +348,10 @@
       try {
         await v2Api.upsertTemplate({
           subject: this.subject,
-          bodyHtml: (this.editorTab == 0) ? this.messageHTML.quill : this.advancedRaw.html,
-          bodyCss: (this.editorTab == 0) ? undefined : this.advancedRaw.css,
+          bodyHtml: (selectedEditor == 0) ? this.messageHTML.quill : this.advancedRaw.html,
+          bodyCss: (selectedEditor == 0) ? undefined : this.advancedRaw.css,
           bodyText: undefined,
-          currentEditor: this.editorTab,
+          currentEditor: selectedEditor,
         });
       } catch (e) {
         console.error(e);
@@ -321,7 +359,8 @@
       }
     }
     async testMessage(nationDetails: {nationName: string; nationID: string; leaderName: string}) {
-      const success = await sendMessage((this.editorTab == 0) ? this.messageHTML.quill : this.messageHTML.advanced, nationDetails); 
+      const selectedEditor = this.editorTab === 2 ? 1 : 0;
+      const success = await sendMessage((selectedEditor == 0) ? this.messageHTML.quill : this.messageHTML.advanced, nationDetails); 
       if (!success) alert('Couldn\'t send your message!');
     }
 
@@ -418,6 +457,46 @@
         this.bulkActionLoading = null;
       }
     }
+
+    parseNationIds(): number[] {
+      return this.nationIdsInput
+        .split(/[,\n\r\t ]+/)
+        .map((value) => Number(value.trim()))
+        .filter((value) => Number.isInteger(value) && value > 0);
+    }
+
+    async runNationIdSend() {
+      this.bulkActionLoading = 'nation-ids';
+      this.bulkResult = null;
+      this.bulkError = '';
+      try {
+        if (!localStorage.getItem('pwSessionToken')) {
+          this.bulkError = 'Unauthorized: please log in from Account with your Politics & War API key.';
+          return;
+        }
+
+        const nationIds = this.parseNationIds();
+        if (nationIds.length === 0) {
+          this.bulkError = 'Enter at least one valid nation ID separated by commas.';
+          return;
+        }
+
+        const nationIdsCsv = nationIds.join(',');
+        const previewResponse = await v2Api.sendByNationIds({ dryRun: true, nationIds: nationIdsCsv });
+        this.bulkPreview = this.normalizePreview(previewResponse);
+
+        const confirmed = await this.showConfirmDialog(`Send to ${this.bulkPreview.totalCandidates} nations?`);
+        if (!confirmed) return;
+
+        const sendResponse = await v2Api.sendByNationIds({ dryRun: false, nationIds: nationIdsCsv });
+        this.bulkResult = this.normalizeResult(sendResponse);
+      } catch (e) {
+        const message = typeof e === 'object' && e !== null && 'message' in e ? (e as any).message : 'Request failed';
+        this.bulkError = message;
+      } finally {
+        this.bulkActionLoading = null;
+      }
+    }
     showConfirmDialog(message: string): Promise<boolean> {
       return new Promise((resolve) => {
         this.confirmDialogMessage = message;
@@ -470,6 +549,27 @@
   overflow-y: auto;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
+}
+
+.editor-tabs-wrapper {
+  width: 100%;
+}
+
+.editor-tabs {
+  width: 100%;
+}
+
+@media only screen and (max-width: 959px) {
+  .editor-tabs ::v-deep .v-slide-group__wrapper {
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .editor-tabs ::v-deep .v-tab {
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
 }
 </style>
 
