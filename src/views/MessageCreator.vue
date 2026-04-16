@@ -74,8 +74,8 @@
           outlined
           class="mt-3 mb-0"
         >
-          Send to Active (24h) + No Alliance + Discord Filter
-        </v-btn>
+          {{ bulkError }}
+        </v-alert>
       </div>
 
       <v-divider class="my-4" />
@@ -420,7 +420,10 @@
       } else if (this.subject != this.config.messageSubject) {
         this.saveChangesOpen = true;
         return;
-      } else if (this.editorTab !== 0 && selectedEditor != this.config.currentEditor) {
+      }
+
+      const selectedEditor = this.editorTab === 2 ? 1 : 0;
+      if (this.editorTab !== 0 && selectedEditor != this.config.currentEditor) {
         this.saveChangesOpen = true;
         return;
       }
