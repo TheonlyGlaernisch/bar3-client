@@ -48,35 +48,55 @@
         <v-text-field
           dense
           outlined
-          v-model="nationIdsInput"
-          label="Nation IDs (comma-separated)"
-          placeholder="12345, 67890, 11223"
-          hint="Enter one or more nation IDs separated by commas."
-          persistent-hint
+          hide-details
+          class="city-filter-input"
+          type="number"
+          min="0"
+          v-model.number="maxCities"
+          label="Max Cities"
+        />
+        <v-select
+          dense
+          outlined
+          hide-details
+          class="discord-filter-select"
+          :items="discordFilterOptions"
+          item-text="label"
+          item-value="value"
+          v-model="discordFilterHasDiscord"
+          label="Discord Filter"
         />
       </div>
 
       <div class="d-flex flex-wrap mt-3" style="gap: 12px;">
         <v-btn
           color="primary"
-          class="mt-2"
-          :loading="bulkActionLoading === 'nation-ids'"
+          :loading="bulkActionLoading === 'unallied'"
           :disabled="!!bulkActionLoading"
-          @click="runNationIdSend()"
+          @click="runBulkSend('unallied')"
         >
-          Send
+          Send to Active (24h) + No Alliance
         </v-btn>
-
-        <v-alert
-          v-if="bulkError"
-          type="error"
-          dense
+        <v-btn
+          color="primary"
           outlined
-          class="mt-3 mb-0"
+          :loading="bulkActionLoading === 'discord'"
+          :disabled="!!bulkActionLoading"
+          @click="runBulkSend('discord')"
         >
           Send to Active (24h) + No Alliance + Discord Filter
         </v-btn>
       </div>
+
+      <v-alert
+        v-if="bulkError"
+        type="error"
+        dense
+        outlined
+        class="mt-3 mb-0"
+      >
+        {{ bulkError }}
+      </v-alert>
 
       <v-divider class="my-4" />
 
@@ -115,21 +135,33 @@
         <div class="grey--text text--lighten-1">
           {{ bulkPreview.totalCandidates }} candidate{{ bulkPreview.totalCandidates === 1 ? '' : 's' }}
         </div>
+        <v-list dense class="preview-list mt-2">
+          <v-list-item v-for="(row, idx) in bulkPreviewRows" :key="`preview-${idx}`">
+            <v-list-item-content>
+              <v-list-item-title>{{ row }}</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item v-if="bulkPreviewRows.length === 0">
+            <v-list-item-content>
+              <v-list-item-title class="grey--text">No preview rows returned.</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+      </div>
 
-        <div v-if="bulkResult" class="mt-4">
-          <h4 class="mb-1">Last Send Result</h4>
-          <div>Attempted: {{ bulkResult.attempted }}</div>
-          <div>Sent: {{ bulkResult.sent }}</div>
-          <div>Failed: {{ bulkResult.failed }}</div>
-          <v-list dense v-if="bulkResultFailures.length > 0" class="preview-list mt-2">
-            <v-subheader>Failures (first {{ bulkResultFailures.length }})</v-subheader>
-            <v-list-item v-for="(failure, idx) in bulkResultFailures" :key="`failure-${idx}`">
-              <v-list-item-content>
-                <v-list-item-title>{{ failure }}</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
-        </div>
+      <div v-if="bulkResult" class="mt-4">
+        <h4 class="mb-1">Last Send Result</h4>
+        <div>Attempted: {{ bulkResult.attempted }}</div>
+        <div>Sent: {{ bulkResult.sent }}</div>
+        <div>Failed: {{ bulkResult.failed }}</div>
+        <v-list dense v-if="bulkResultFailures.length > 0" class="preview-list mt-2">
+          <v-subheader>Failures (first {{ bulkResultFailures.length }})</v-subheader>
+          <v-list-item v-for="(failure, idx) in bulkResultFailures" :key="`failure-${idx}`">
+            <v-list-item-content>
+              <v-list-item-title>{{ failure }}</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
       </div>
     </v-card>
 
@@ -420,7 +452,10 @@
       } else if (this.subject != this.config.messageSubject) {
         this.saveChangesOpen = true;
         return;
-      } else if (this.editorTab !== 0 && selectedEditor != this.config.currentEditor) {
+      }
+
+      const selectedEditor = this.editorTab === 2 ? 1 : 0;
+      if (this.editorTab !== 0 && selectedEditor != this.config.currentEditor) {
         this.saveChangesOpen = true;
         return;
       }
