@@ -3,8 +3,9 @@
 <template>
   <div class="view-small-inner-wrapper view-padding-inner-wrapper">
     <div class="d-flex align-center mb-4">
-      <h1 class="">Message Creator</h1>
+      <h1 class="">{{ isAutomationPage ? 'Automation' : 'Message Creator' }}</h1>
       <v-btn
+        v-if="!isAutomationPage"
         outlined
         color="primary"
         class="ml-auto"
@@ -15,6 +16,7 @@
     </div>
     <update-available-banner/>
     <v-text-field
+      v-if="!isAutomationPage"
       dense
       outlined
       placeholder="Subject Line"
@@ -23,91 +25,26 @@
       @change="changes()"
       class="mt-4 mb-4"
     />
-    <div class="mt-2 mb-2">
+    <div v-if="!isAutomationPage" class="mt-2 mb-2">
       The editor allows you to easily create your own custom message. You can either choose between the Basic Editor with WYSIWYG controls,
       or the advanced editor with HTML and CSS. With both editors it is recommended you use the test button to try out sending a message before
       you turn on Bar 3 and send it to new nations. Finally, you can use two variables in your messages. Use <code>\(nation)</code> to substitute the
       nation name, and use <code>\(leader)</code> to substitute the leader name in your messages or subject line.
     </div>
 
-    <div class="editor-tabs-wrapper mt-2" style="margin-bottom: 200px">
-      <v-tabs
-        v-model="editorTab"
-        class="editor-tabs"
-        :vertical="$vuetify.breakpoint.mdAndUp"
-        show-arrows
-        @change="changes()"
-      >
-      <v-tab class="editor-tab">
-        Automation
-      </v-tab>
-      <v-tab class="editor-tab">
-        Basic Editor
-      </v-tab>
-      <v-tab class="editor-tab">
-        Advanced Editor
-      </v-tab>
-
-      <v-tab-item class="mt-2">
-      <div class="pa-2">
-        <h3 class="mb-3">Automation Bulk Send</h3>
-        <div class="d-flex align-center flex-wrap" style="gap: 12px;">
-          <v-text-field
-            dense
-            outlined
-            hide-details
-            class="city-filter-input"
-            type="number"
-            min="0"
-            v-model.number="minCities"
-            label="Min Cities"
-          />
-          <v-text-field
-            dense
-            outlined
-            hide-details
-            class="city-filter-input"
-            type="number"
-            min="0"
-            v-model.number="maxCities"
-            label="Max Cities"
-          />
-          <v-select
-            dense
-            outlined
-            hide-details
-            class="discord-filter-select"
-            :items="discordFilterOptions"
-            item-text="label"
-            item-value="value"
-            v-model="discordFilterHasDiscord"
-            label="Discord Filter"
-          />
-        </div>
-
-        <div class="d-flex flex-wrap mt-3" style="gap: 12px;">
-          <v-btn
-            color="primary"
-            :loading="bulkActionLoading === 'unallied'"
-            :disabled="!!bulkActionLoading"
-            @click="runBulkSend('unallied')"
-          >
-            Send to Active (24h) + No Alliance
-          </v-btn>
-          <v-btn
-            color="primary"
-            outlined
-            :loading="bulkActionLoading === 'discord'"
-            :disabled="!!bulkActionLoading"
-            @click="runBulkSend('discord')"
-          >
-            Send to Active (24h) + No Alliance + Discord Filter
-          </v-btn>
-        </div>
-
-        <v-divider class="my-4" />
-
-        <h3 class="mb-3">Send by Nation IDs</h3>
+    <v-card v-if="isAutomationPage" outlined class="pa-4 mt-4 mb-4">
+      <h3 class="mb-3">Automation Bulk Send</h3>
+      <div class="d-flex align-center flex-wrap" style="gap: 12px;">
+        <v-text-field
+          dense
+          outlined
+          hide-details
+          class="city-filter-input"
+          type="number"
+          min="0"
+          v-model.number="minCities"
+          label="Min Cities"
+        />
         <v-text-field
           dense
           outlined
@@ -117,6 +54,9 @@
           hint="Enter one or more nation IDs separated by commas."
           persistent-hint
         />
+      </div>
+
+      <div class="d-flex flex-wrap mt-3" style="gap: 12px;">
         <v-btn
           color="primary"
           class="mt-2"
@@ -134,26 +74,46 @@
           outlined
           class="mt-3 mb-0"
         >
-          {{ bulkError }}
-        </v-alert>
+          Send to Active (24h) + No Alliance + Discord Filter
+        </v-btn>
+      </div>
 
-        <div v-if="bulkPreview" class="mt-4">
-          <h4 class="mb-1">Preview</h4>
-          <div class="grey--text text--lighten-1">
-            {{ bulkPreview.totalCandidates }} candidate{{ bulkPreview.totalCandidates === 1 ? '' : 's' }}
-          </div>
-          <v-list dense class="preview-list mt-2">
-            <v-list-item v-for="(row, idx) in bulkPreviewRows" :key="`preview-${idx}`">
-              <v-list-item-content>
-                <v-list-item-title>{{ row }}</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item v-if="bulkPreviewRows.length === 0">
-              <v-list-item-content>
-                <v-list-item-title class="grey--text">No preview rows returned.</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
+      <v-divider class="my-4" />
+
+      <h3 class="mb-3">Send by Nation IDs</h3>
+      <v-text-field
+        dense
+        outlined
+        v-model="nationIdsInput"
+        label="Nation IDs (comma-separated)"
+        placeholder="12345, 67890, 11223"
+        hint="Enter one or more nation IDs separated by commas."
+        persistent-hint
+      />
+      <v-btn
+        color="primary"
+        class="mt-2"
+        :loading="bulkActionLoading === 'nation-ids'"
+        :disabled="!!bulkActionLoading"
+        @click="runNationIdSend()"
+      >
+        Send
+      </v-btn>
+
+      <v-alert
+        v-if="bulkError"
+        type="error"
+        dense
+        outlined
+        class="mt-3 mb-0"
+      >
+        {{ bulkError }}
+      </v-alert>
+
+      <div v-if="bulkPreview" class="mt-4">
+        <h4 class="mb-1">Preview</h4>
+        <div class="grey--text text--lighten-1">
+          {{ bulkPreview.totalCandidates }} candidate{{ bulkPreview.totalCandidates === 1 ? '' : 's' }}
         </div>
 
         <div v-if="bulkResult" class="mt-4">
@@ -171,7 +131,23 @@
           </v-list>
         </div>
       </div>
-      </v-tab-item>
+    </v-card>
+
+    <div v-else class="editor-tabs-wrapper mt-2" style="margin-bottom: 200px">
+      <v-tabs
+        v-model="editorTab"
+        class="editor-tabs"
+        :vertical="$vuetify.breakpoint.mdAndUp"
+        show-arrows
+        @change="changes()"
+      >
+      <v-tab class="editor-tab">
+        Basic Editor
+      </v-tab>
+      <v-tab class="editor-tab">
+        Advanced Editor
+      </v-tab>
+
       <v-tab-item class="mt-2">
         <message-creator 
           @change="messageHTML.quill = $event; changes()" 
@@ -314,6 +290,7 @@
     </v-tabs>
     </div>
     <saved-changes-card
+      v-if="!isAutomationPage"
       v-model="saveChangesOpen"
       @save="save($event)"
     />
@@ -327,7 +304,7 @@
 </template>
 
 <script lang="ts">
-  import {Component, Vue} from 'vue-property-decorator';
+  import {Component, Vue, Watch} from 'vue-property-decorator';
   import getConfig from '@/actions/getConfig';
   import sendConfig from '@/actions/sendConfig';
   import { Config, DefaultConfig } from '@/types';
@@ -396,6 +373,10 @@
       });
     }
 
+    get isAutomationPage(): boolean {
+      return this.$route.path === '/automation';
+    }
+
     async mounted() {
       const config = await getConfig();
       if (config && !(config instanceof Error)) {
@@ -411,10 +392,23 @@
       }
     }
 
-    changes() {
-      const selectedEditor = this.editorTab === 2 ? 1 : 0;
+    @Watch('$route.path')
+    onRoutePathChanged() {
+      if (this.isAutomationPage) {
+        this.saveChangesOpen = false;
+        return;
+      }
+      this.editorTab = this.config.currentEditor || 0;
+      this.changes();
+    }
 
-      if (this.editorTab == 1 && this.messageHTML.quill != this.config.messageHTML) {
+    changes() {
+      if (this.isAutomationPage) {
+        this.saveChangesOpen = false;
+        return;
+      }
+
+      if (this.editorTab == 0 && this.messageHTML.quill != this.config.messageHTML) {
         this.saveChangesOpen = true;
         return;
       } else if (this.editorTab == 2 && (
