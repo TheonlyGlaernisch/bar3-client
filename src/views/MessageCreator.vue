@@ -84,8 +84,8 @@
           :disabled="!!bulkActionLoading"
           @click="runDiscordBulkSend"
         >
-          Send to Active (24h) + No Alliance + Discord Filter
-        </v-btn>
+          {{ bulkError }}
+        </v-alert>
       </div>
 
       <v-alert
