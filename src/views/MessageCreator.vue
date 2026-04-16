@@ -120,16 +120,6 @@
         Send
       </v-btn>
 
-      <v-alert
-        v-if="bulkError"
-        type="error"
-        dense
-        outlined
-        class="mt-3 mb-0"
-      >
-        {{ bulkError }}
-      </v-alert>
-
       <div v-if="bulkPreview" class="mt-4">
         <h4 class="mb-1">Preview</h4>
         <div class="grey--text text--lighten-1">
