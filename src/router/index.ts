@@ -19,6 +19,7 @@ const DISCORD_PUBLIC_PATHS = ['/discord-login', '/auth/discord/callback'];
 const routes: Array<RouteConfig> = [
   { path: '/', redirect: '/dashboard' },
   { path: '/dashboard', name: 'Dashboard', component: Home },
+  { path: '/automation', name: 'Automation', component: MessageCreator },
   { path: '/config', name: 'Configuration', component: Configuration },
   { path: '/message-creator', name: 'Message Creator', component: MessageCreator },
   { path: '/analytics', name: 'Analytics', component: Analytics },
