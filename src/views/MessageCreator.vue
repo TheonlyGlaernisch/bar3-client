@@ -73,7 +73,7 @@
           color="primary"
           :loading="bulkActionLoading === 'unallied'"
           :disabled="!!bulkActionLoading"
-          @click="runBulkSend('unallied')"
+          @click="runUnalliedBulkSend"
         >
           Send to Active (24h) + No Alliance
         </v-btn>
@@ -82,7 +82,7 @@
           outlined
           :loading="bulkActionLoading === 'discord'"
           :disabled="!!bulkActionLoading"
-          @click="runBulkSend('discord')"
+          @click="runDiscordBulkSend"
         >
           {{ bulkError }}
         </v-alert>
@@ -222,7 +222,7 @@
     SavedChangesCard,
     TestMessageDialog,
     UpdateAvailableBanner,
-    ConfirmDialog  // Add this line
+    ConfirmDialog
   }
 })
   export default class MessageDesigner extends Vue {
@@ -283,7 +283,7 @@
         this.messageHTML.quill = config.messageHTML || '';
         this.subject = config.messageSubject || '';
         this.config = config;
-        this.editorTab = this.$route.path === '/automation' ? 0 : (config.currentEditor || 0) + 1;
+        this.editorTab = this.$route.path === '/automation' ? 0 : (config.currentEditor || 0);
         this.changes();
       } else {
         alert('Couldn\'t retrieve your config!');
@@ -309,7 +309,7 @@
       if (this.editorTab == 0 && this.messageHTML.quill != this.config.messageHTML) {
         this.saveChangesOpen = true;
         return;
-      } else if (this.editorTab == 2 && (
+      } else if (this.editorTab == 1 && (
         this.advancedRaw.html != (this.config.advancedRaw && this.config.advancedRaw.html) ||
         this.advancedRaw.css != (this.config.advancedRaw && this.config.advancedRaw.css)
       )) {
@@ -320,7 +320,7 @@
         return;
       }
 
-      const selectedEditor = this.editorTab === 2 ? 1 : 0;
+      const selectedEditor = this.editorTab === 1 ? 1 : 0;
       if (this.editorTab !== 0 && selectedEditor != this.config.currentEditor) {
         this.saveChangesOpen = true;
         return;
@@ -337,7 +337,7 @@
 
       const token = localStorage.getItem('pwSessionToken') || '';
 
-      const selectedEditor = this.editorTab === 2 ? 1 : 0;
+      const selectedEditor = this.editorTab === 1 ? 1 : 0;
       const newConfig = {
         messageSubject: this.subject,
         messageHTML: (selectedEditor == 0) ? this.messageHTML.quill : this.messageHTML.advanced,
@@ -378,7 +378,7 @@
       }
     }
     async testMessage(nationDetails: {nationName: string; nationID: string; leaderName: string}) {
-      const selectedEditor = this.editorTab === 2 ? 1 : 0;
+      const selectedEditor = this.editorTab === 1 ? 1 : 0;
       const success = await sendMessage((selectedEditor == 0) ? this.messageHTML.quill : this.messageHTML.advanced, nationDetails); 
       if (!success) alert('Couldn\'t send your message!');
     }
@@ -435,6 +435,14 @@
         return false;
       }
       return true;
+    }
+
+    runUnalliedBulkSend() {
+      this.runBulkSend('unallied');
+    }
+
+    runDiscordBulkSend() {
+      this.runBulkSend('discord');
     }
 
     async runBulkSend(mode: 'unallied' | 'discord') {
