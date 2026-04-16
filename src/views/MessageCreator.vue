@@ -404,7 +404,7 @@
         this.messageHTML.quill = config.messageHTML || '';
         this.subject = config.messageSubject || '';
         this.config = config;
-        this.editorTab = (config.currentEditor || 0) + 1;
+        this.editorTab = this.$route.path === '/automation' ? 0 : (config.currentEditor || 0) + 1;
         this.changes();
       } else {
         alert('Couldn\'t retrieve your config!');
