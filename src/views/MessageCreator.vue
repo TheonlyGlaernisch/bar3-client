@@ -187,6 +187,130 @@
           @css="advancedRaw.css = $event; changes()"
         />
       </v-tab-item>
+      <v-tab-item class="mt-2">
+        <v-card outlined class="pa-4 mb-4">
+          <h3 class="mb-3">Automation Bulk Send</h3>
+          <div class="d-flex align-center flex-wrap" style="gap: 12px;">
+            <v-text-field
+              dense
+              outlined
+              hide-details
+              class="city-filter-input"
+              type="number"
+              min="0"
+              v-model.number="minCities"
+              label="Min Cities"
+            />
+            <v-text-field
+              dense
+              outlined
+              hide-details
+              class="city-filter-input"
+              type="number"
+              min="0"
+              v-model.number="maxCities"
+              label="Max Cities"
+            />
+            <v-select
+              dense
+              outlined
+              hide-details
+              class="discord-filter-select"
+              :items="discordFilterOptions"
+              item-text="label"
+              item-value="value"
+              v-model="discordFilterHasDiscord"
+              label="Discord Filter"
+            />
+          </div>
+
+          <div class="d-flex flex-wrap mt-3" style="gap: 12px;">
+            <v-btn
+              color="primary"
+              :loading="bulkActionLoading === 'unallied'"
+              :disabled="!!bulkActionLoading"
+              @click="runBulkSend('unallied')"
+            >
+              Send to Active (24h) + No Alliance
+            </v-btn>
+            <v-btn
+              color="primary"
+              outlined
+              :loading="bulkActionLoading === 'discord'"
+              :disabled="!!bulkActionLoading"
+              @click="runBulkSend('discord')"
+            >
+              Send to Active (24h) + No Alliance + Discord Filter
+            </v-btn>
+          </div>
+
+          <v-divider class="my-4" />
+
+          <h3 class="mb-3">Send by Nation IDs</h3>
+          <v-text-field
+            dense
+            outlined
+            v-model="nationIdsInput"
+            label="Nation IDs (comma-separated)"
+            placeholder="12345, 67890, 11223"
+            hint="Enter one or more nation IDs separated by commas."
+            persistent-hint
+          />
+          <v-btn
+            color="primary"
+            class="mt-2"
+            :loading="bulkActionLoading === 'nation-ids'"
+            :disabled="!!bulkActionLoading"
+            @click="runNationIdSend()"
+          >
+            Send
+          </v-btn>
+
+          <v-alert
+            v-if="bulkError"
+            type="error"
+            dense
+            outlined
+            class="mt-3 mb-0"
+          >
+            {{ bulkError }}
+          </v-alert>
+
+          <div v-if="bulkPreview" class="mt-4">
+            <h4 class="mb-1">Preview</h4>
+            <div class="grey--text text--lighten-1">
+              {{ bulkPreview.totalCandidates }} candidate{{ bulkPreview.totalCandidates === 1 ? '' : 's' }}
+            </div>
+            <v-list dense class="preview-list mt-2">
+              <v-list-item v-for="(row, idx) in bulkPreviewRows" :key="`preview-${idx}`">
+                <v-list-item-content>
+                  <v-list-item-title>{{ row }}</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-list-item v-if="bulkPreviewRows.length === 0">
+                <v-list-item-content>
+                  <v-list-item-title class="grey--text">No preview rows returned.</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list>
+          </div>
+
+          <div v-if="bulkResult" class="mt-4">
+            <h4 class="mb-1">Last Send Result</h4>
+            <div>Attempted: {{ bulkResult.attempted }}</div>
+            <div>Sent: {{ bulkResult.sent }}</div>
+            <div>Failed: {{ bulkResult.failed }}</div>
+            <v-list dense v-if="bulkResultFailures.length > 0" class="preview-list mt-2">
+              <v-subheader>Failures (first {{ bulkResultFailures.length }})</v-subheader>
+              <v-list-item v-for="(failure, idx) in bulkResultFailures" :key="`failure-${idx}`">
+                <v-list-item-content>
+                  <v-list-item-title>{{ failure }}</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list>
+          </div>
+        </v-card>
+      </v-tab-item>
     </v-tabs>
     </div>
     <saved-changes-card
