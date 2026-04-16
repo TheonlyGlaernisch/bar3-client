@@ -84,8 +84,8 @@
           :disabled="!!bulkActionLoading"
           @click="runDiscordBulkSend"
         >
-          {{ bulkError }}
-        </v-alert>
+          Send to Discord Filter
+        </v-btn>
       </div>
 
       <v-alert
