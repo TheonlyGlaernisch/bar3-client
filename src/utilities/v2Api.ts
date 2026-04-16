@@ -109,5 +109,17 @@ export const v2Api = {
       throw new Error(data?.error || 'Failed to send active + unallied + discord-filtered messages');
     }
     return res.json();
+  },
+
+  async sendByNationIds(payload: { dryRun: boolean; nationIds: string | number[] }): Promise<any> {
+    const res = await v2Fetch('/api/v2/automation/send-by-nation-ids', { method: 'POST' }, payload);
+    if (res.status === 401 || res.status === 403) {
+      throw new Error('Unauthorized: please log in from Account with your Politics & War API key.');
+    }
+    if (res.status !== 200) {
+      const data = await res.json().catch(() => ({} as any));
+      throw new Error(data?.error || 'Failed to send messages by nation IDs');
+    }
+    return res.json();
   }
 };
