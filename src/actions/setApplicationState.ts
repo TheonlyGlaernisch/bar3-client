@@ -11,7 +11,6 @@ export default async function setApplicationState(applicationOn: boolean) {
       return true;
     } catch (e) {
       error = e;
-      console.error(e);
       return error;
     }
   }
@@ -22,7 +21,6 @@ export default async function setApplicationState(applicationOn: boolean) {
     { applicationOn }
   ).catch((e) => {
     error = e;
-    console.error(e);
   });
 
   if (!response) return error;
