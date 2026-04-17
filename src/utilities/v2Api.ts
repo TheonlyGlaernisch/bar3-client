@@ -46,7 +46,6 @@ export const v2Api = {
       if (e instanceof Error && e.message === 'Unauthorized') {
         throw e;
       }
-      console.warn('v2 getAutomationState failed, falling back to legacy endpoint:', e);
       const appData = await getAppData();
       if (!appData) throw new Error('Failed to load automation state via fallback endpoint');
       return { enabled: appData.applicationOn };
@@ -58,23 +57,16 @@ export const v2Api = {
       const res = await v2Fetch('/api/v2/automation/state', { method: 'POST' }, { enabled });
       if (res.status !== 204) throw new Error('Failed to update automation state');
     } catch (e) {
-      console.warn('v2 setAutomationState failed, falling back to legacy endpoint:', e);
       const res = await apiFetch('/api/setApplicationState', { method: 'POST' }, { applicationOn: enabled });
       if (res.status !== 204) throw new Error('Failed to update automation state via fallback endpoint');
     }
   },
 
   async upsertTemplate(payload: { subject: string; bodyText?: string; bodyHtml?: string; bodyCss?: string; currentEditor?: number }): Promise<void> {
-    try {
-      const res = await v2Fetch('/api/v2/templates', { method: 'POST' }, payload);
-      if (res.status !== 201 && res.status !== 200) {
-        const data = await res.json();
-        throw new Error(data?.error || `Failed to save (status: ${res.status})`);
-      }
-      return;
-    } catch (e) {
-      console.error('Failed to save template to backend:', e);
-      throw e;
+    const res = await v2Fetch('/api/v2/templates', { method: 'POST' }, payload);
+    if (res.status !== 201 && res.status !== 200) {
+      const data = await res.json();
+      throw new Error(data?.error || `Failed to save (status: ${res.status})`);
     }
   },
 

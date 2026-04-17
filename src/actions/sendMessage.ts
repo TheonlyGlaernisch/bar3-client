@@ -17,7 +17,6 @@ export default async function sendMessage(
     }
   ).catch((e) => {
     error = e;
-    console.error(e);
   });
 
   if (!response) return error;

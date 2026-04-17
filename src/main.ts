@@ -3,18 +3,11 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import vuetify from './plugins/vuetify'
-import VueGtag from "vue-gtag"
+import { ensureGoogleTag } from '@/utilities/googleTag'
 
 Vue.config.productionTip = false
 
-Vue.use(
-  VueGtag,
-  {
-    config: { id: "G-P4D00LBHYL" }
-  },
-  router
-)
-
+ensureGoogleTag();
 new Vue({
   router,
   store,

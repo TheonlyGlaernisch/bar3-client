@@ -84,8 +84,8 @@
           :disabled="!!bulkActionLoading"
           @click="runDiscordBulkSend"
         >
-          {{ bulkError }}
-        </v-alert>
+          Send to Discord Filter
+        </v-btn>
       </div>
 
       <v-alert
@@ -373,7 +373,6 @@
           currentEditor: selectedEditor,
         });
       } catch (e) {
-        console.error(e);
         alert('Saved locally, but failed to save to MongoDB. Please try again.');
       }
     }

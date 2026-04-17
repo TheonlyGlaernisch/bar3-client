@@ -10,7 +10,6 @@ export default async function sendConfig(config: Config) {
     { config }
   ).catch((e) => {
     error = e;
-    console.error(e);
   });
 
   if (!response) return error;
