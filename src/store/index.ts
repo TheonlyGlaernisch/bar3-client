@@ -21,7 +21,8 @@ export default new Vuex.Store({
     },
     newUpdate: null as null | GitHubRelease,
     isLoggedIn: !!localStorage.getItem('pwSessionToken'),
-    isDiscordAuthed: false
+    isDiscordAuthed: false,
+    isBotAuthed: false
   },
   getters: {
     applicationOn(state) {
@@ -33,6 +34,7 @@ export default new Vuex.Store({
     },
     isLoggedIn: (state) => state.isLoggedIn,
     isDiscordAuthed: (state) => state.isDiscordAuthed,
+    isBotAuthed: (state) => state.isBotAuthed,
 
     sentMessages(state) {
       return state.sentMessages;
@@ -119,6 +121,9 @@ export default new Vuex.Store({
     },
     setDiscordAuthed(state, value: boolean) {
       state.isDiscordAuthed = value;
+    },
+    setBotAuthed(state, value: boolean) {
+      state.isBotAuthed = value;
     },
 
     setSentMessages(state, sentMessagesRefresh) {

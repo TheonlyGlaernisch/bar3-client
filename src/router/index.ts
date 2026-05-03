@@ -10,7 +10,9 @@ import About from '@/views/About.vue'
 import Help from '@/views/Help.vue'
 import DiscordLogin from '@/views/DiscordLogin.vue'
 import DiscordCallback from '@/views/DiscordCallback.vue'
+import BotPanel from '@/views/BotPanel.vue'
 import { discordAuth } from '@/utilities/discordAuth'
+import { botAuth } from '@/utilities/botAuth'
 
 Vue.use(VueRouter)
 
@@ -28,6 +30,7 @@ const routes: Array<RouteConfig> = [
   { path: '/help', name: 'Help', component: Help },
   { path: '/discord-login', name: 'Discord Login', component: DiscordLogin },
   { path: '/auth/discord/callback', name: 'Discord Callback', component: DiscordCallback },
+  { path: '/bot', name: 'Bot Panel', component: BotPanel, meta: { requiresBotAuth: true } },
 ]
 
 const router = new VueRouter({
@@ -45,6 +48,15 @@ router.beforeEach(async (to, _from, next) => {
   if (!authed) {
     next(`/discord-login?returnTo=${encodeURIComponent(to.fullPath)}`);
     return;
+  }
+
+  // Bot panel requires a separate, more-restricted access check.
+  if (to.meta?.requiresBotAuth) {
+    const botAuthed = await botAuth.isAuthed();
+    if (!botAuthed) {
+      next('/dashboard');
+      return;
+    }
   }
 
   // Consume a ?returnTo= parameter left by the server after OAuth, but only
