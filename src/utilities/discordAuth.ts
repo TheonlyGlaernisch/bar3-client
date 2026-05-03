@@ -1,8 +1,13 @@
 const SERVER_BASE_URL =
   process.env.VUE_APP_SERVER_URL || 'https://bar3-server.onrender.com';
 
+interface SessionData {
+  authenticated: boolean;
+  isAdmin: boolean;
+}
+
 // In-memory cache so the server is only contacted once per page load.
-let sessionCache: boolean | null = null;
+let sessionCache: SessionData | null = null;
 
 export const discordAuth = {
   /**
@@ -21,20 +26,36 @@ export const discordAuth = {
 
   /**
    * Ask the server whether the current session cookie is authenticated.
+   * Parses the JSON response to also capture the `isAdmin` flag.
    * The result is cached in memory for the lifetime of the page to avoid
    * repeated server calls during in-app navigation.
    */
-  async isAuthed(): Promise<boolean> {
+  async getSession(): Promise<SessionData> {
     if (sessionCache !== null) return sessionCache;
     try {
       const res = await fetch(`${SERVER_BASE_URL}/auth/session`, {
         credentials: 'include',
       });
-      sessionCache = res.ok;
+      if (res.ok) {
+        const data = await res.json();
+        sessionCache = {
+          authenticated: true,
+          isAdmin: data.isAdmin === true,
+        };
+      } else {
+        sessionCache = { authenticated: false, isAdmin: false };
+      }
     } catch {
-      sessionCache = false;
+      sessionCache = { authenticated: false, isAdmin: false };
     }
     return sessionCache;
+  },
+
+  /**
+   * Convenience wrapper that returns only the authenticated flag.
+   */
+  async isAuthed(): Promise<boolean> {
+    return (await discordAuth.getSession()).authenticated;
   },
 
   /**
