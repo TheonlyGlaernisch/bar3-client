@@ -92,8 +92,8 @@ import Vue from 'vue';
   export default class SideBar extends Vue {
     isShowing = false;
 
-    get isBotAuthed(): boolean {
-      return this.$store.getters.isBotAuthed;
+    get isAdmin(): boolean {
+      return this.$store.getters.isAdmin;
     }
 
     get items(): SideBarItem[] {
@@ -139,7 +139,7 @@ import Vue from 'vue';
     path: '/help',
   },
 ];
-      if (this.isBotAuthed) {
+      if (this.isAdmin) {
         base.push({
           title: 'Bot',
           icon: 'mdi-robot',
