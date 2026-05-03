@@ -58,17 +58,17 @@ export default class App extends Vue {
   }
 
   async mounted() {
-    const authed = await discordAuth.isAuthed();
-    this.$store.commit('setDiscordAuthed', authed);
+    const session = await discordAuth.getSession();
+    this.$store.commit('setDiscordAuthed', session.authenticated);
+    this.$store.commit('setIsAdmin', session.isAdmin);
 
-    if (!authed) {
+    if (!session.authenticated) {
       // Avoid hitting protected API endpoints with stale local tokens when the
       // Discord session cookie is not authenticated.
       localStorage.removeItem('pwSessionToken');
       return;
     }
 
-    // Check bot-panel access in parallel with loading automation state.
     const [botAuthed] = await Promise.all([
       botAuth.isAuthed(),
       (async () => {
