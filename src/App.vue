@@ -41,7 +41,6 @@ import SideBar from '@/components/SideBar.vue';
 import V2AutomationToggle from '@/components/V2AutomationToggle.vue';
 import { v2Api } from '@/utilities/v2Api';
 import { discordAuth } from '@/utilities/discordAuth';
-import { botAuth } from '@/utilities/botAuth';
 
 @Component({
   name: 'App',
@@ -82,7 +81,6 @@ export default class App extends Vue {
         }
       })(),
     ]);
-    this.$store.commit('setBotAuthed', botAuthed);
   }
 }
 </script>
