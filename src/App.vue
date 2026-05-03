@@ -68,7 +68,8 @@ export default class App extends Vue {
       return;
     }
 
-    await Promise.all([
+    const [botAuthed] = await Promise.all([
+      botAuth.isAuthed(),
       (async () => {
         const token = localStorage.getItem('pwSessionToken') || '';
         if (!token) return;

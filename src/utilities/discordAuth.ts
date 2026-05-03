@@ -39,8 +39,8 @@ export const discordAuth = {
       if (res.ok) {
         const data = await res.json();
         sessionCache = {
-          authenticated: true,
-          isAdmin: data.isAdmin === true,
+          authenticated: data?.authenticated === true,
+          isAdmin: data?.isAdmin === true,
         };
       } else {
         sessionCache = { authenticated: false, isAdmin: false };

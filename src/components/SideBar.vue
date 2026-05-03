@@ -96,6 +96,7 @@ import Vue from 'vue';
       return this.$store.getters.isAdmin;
     }
 
+
     get items(): SideBarItem[] {
       const base: SideBarItem[] = [
   {
