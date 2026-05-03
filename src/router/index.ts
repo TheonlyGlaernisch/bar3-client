@@ -50,12 +50,16 @@ router.beforeEach(async (to, _from, next) => {
     return;
   }
 
-  // Bot panel requires a separate, more-restricted access check.
+  // Bot panel access: allow Discord admins from /auth/session, otherwise
+  // fall back to the legacy bot-auth gate.
   if (to.meta?.requiresBotAuth) {
-    const botAuthed = await botAuth.isAuthed();
-    if (!botAuthed) {
-      next('/dashboard');
-      return;
+    const session = await discordAuth.getSession();
+    if (!session.isAdmin) {
+      const botAuthed = await botAuth.isAuthed();
+      if (!botAuthed) {
+        next('/dashboard');
+        return;
+      }
     }
   }
 
