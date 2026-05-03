@@ -41,6 +41,7 @@ import SideBar from '@/components/SideBar.vue';
 import V2AutomationToggle from '@/components/V2AutomationToggle.vue';
 import { v2Api } from '@/utilities/v2Api';
 import { discordAuth } from '@/utilities/discordAuth';
+import { botAuth } from '@/utilities/botAuth';
 
 @Component({
   name: 'App',
@@ -67,14 +68,21 @@ export default class App extends Vue {
       return;
     }
 
-    const token = localStorage.getItem('pwSessionToken') || '';
-    if (!token) return;
-    try {
-      const state = await v2Api.getAutomationState();
-      this.$store.commit('setApplicationState', !!state.enabled);
-    } catch {
-      // ignore
-    }
+    // Check bot-panel access in parallel with loading automation state.
+    const [botAuthed] = await Promise.all([
+      botAuth.isAuthed(),
+      (async () => {
+        const token = localStorage.getItem('pwSessionToken') || '';
+        if (!token) return;
+        try {
+          const state = await v2Api.getAutomationState();
+          this.$store.commit('setApplicationState', !!state.enabled);
+        } catch {
+          // ignore
+        }
+      })(),
+    ]);
+    this.$store.commit('setBotAuthed', botAuthed);
   }
 }
 </script>

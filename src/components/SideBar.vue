@@ -91,7 +91,13 @@ import Vue from 'vue';
   @Component
   export default class SideBar extends Vue {
     isShowing = false;
-    items: SideBarItem[] = [
+
+    get isBotAuthed(): boolean {
+      return this.$store.getters.isBotAuthed;
+    }
+
+    get items(): SideBarItem[] {
+      const base: SideBarItem[] = [
   {
     title: 'Dashboard',
     icon: 'mdi-view-dashboard',
@@ -133,6 +139,16 @@ import Vue from 'vue';
     path: '/help',
   },
 ];
+      if (this.isBotAuthed) {
+        base.push({
+          title: 'Bot',
+          icon: 'mdi-robot',
+          path: '/bot',
+        });
+      }
+      return base;
+    }
+
     selectedItem = 0;
 
     goto(path: string) {
