@@ -1,5 +1,8 @@
 const SERVER_BASE_URL =
   process.env.VUE_APP_SERVER_URL || 'https://bar3-server.onrender.com';
+const BOT_API_BASE_URL =
+  process.env.VUE_APP_BOT_API_URL || SERVER_BASE_URL;
+const BOT_API_KEY = process.env.VUE_APP_BOT_API_KEY || '';
 
 async function botFetch(path: string, init: RequestInit = {}, body?: unknown) {
   const existingHeaders = init.headers;
@@ -14,14 +17,17 @@ async function botFetch(path: string, init: RequestInit = {}, body?: unknown) {
   }
 
   if (body !== undefined) extraHeaders['Content-Type'] = 'application/json';
+  if (BOT_API_KEY) extraHeaders['X-API-Key'] = BOT_API_KEY;
 
-  return fetch(`${SERVER_BASE_URL}${path}`, {
+  return fetch(`${BOT_API_BASE_URL}${path}`, {
     ...init,
     credentials: 'include',
     headers: extraHeaders,
     body: body !== undefined ? JSON.stringify(body) : init.body,
   });
 }
+
+
 
 export interface BotServer {
   id: string;
@@ -36,6 +42,16 @@ export interface BotCommand {
   description: string;
 }
 
+async function readError(res: Response, fallback: string): Promise<string> {
+  try {
+    const data = await res.json();
+    if (typeof data?.error === 'string' && data.error) return data.error;
+  } catch {
+    // ignore
+  }
+  return fallback;
+}
+
 export const botApi = {
   /**
    * Fetch the list of Discord servers the bot is currently a member of.
@@ -43,8 +59,14 @@ export const botApi = {
    */
   async getServers(): Promise<BotServer[]> {
     const res = await botFetch('/api/bot/servers');
-    if (!res.ok) throw new Error('Failed to load bot servers');
-    return res.json();
+    if (!res.ok) throw new Error(await readError(res, 'Failed to load bot servers'));
+    const rows = await res.json();
+    return (Array.isArray(rows) ? rows : []).map((row: any) => ({
+      id: String(row?.id || ''),
+      name: String(row?.name || 'Unknown server'),
+      icon: typeof row?.icon === 'string' ? row.icon : null,
+      memberCount: Number(row?.memberCount ?? row?.member_count ?? 0),
+    }));
   },
 
   /**
@@ -53,19 +75,23 @@ export const botApi = {
    */
   async getCommandUsage(): Promise<BotCommand[]> {
     const res = await botFetch('/api/bot/commands/usage');
-    if (!res.ok) throw new Error('Failed to load command usage');
-    return res.json();
+    if (!res.ok) throw new Error(await readError(res, 'Failed to load command usage'));
+    const rows = await res.json();
+    return (Array.isArray(rows) ? rows : []).map((row: any) => ({
+      name: String(row?.name || row?.command || 'unknown'),
+      usageCount: Number(row?.usageCount ?? row?.count ?? 0),
+      description: String(row?.description || ''),
+    }));
   },
 
   /**
    * Send a message through the bot (distinct from the Politics & War mailer).
-   * Backend: POST /api/bot/send  { channelId, content }
+   * Backend: POST /api/bot/send  { message }
    */
-  async sendMessage(channelId: string, content: string): Promise<void> {
-    const res = await botFetch('/api/bot/send', { method: 'POST' }, { channelId, content });
+  async sendMessage(content: string): Promise<void> {
+    const res = await botFetch('/api/bot/send', { method: 'POST' }, { message: content });
     if (!res.ok) {
-      const data = await res.json().catch(() => ({} as any));
-      throw new Error(data?.error || 'Failed to send bot message');
+      throw new Error(await readError(res, 'Failed to send bot message'));
     }
   },
 };

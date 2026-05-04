@@ -12,7 +12,6 @@ import DiscordLogin from '@/views/DiscordLogin.vue'
 import DiscordCallback from '@/views/DiscordCallback.vue'
 import BotPanel from '@/views/BotPanel.vue'
 import { discordAuth } from '@/utilities/discordAuth'
-import { botAuth } from '@/utilities/botAuth'
 
 Vue.use(VueRouter)
 
@@ -50,10 +49,10 @@ router.beforeEach(async (to, _from, next) => {
     return;
   }
 
-  // Bot panel requires a separate, more-restricted access check.
+  // Bot panel access is controlled by the Discord session admin flag.
   if (to.meta?.requiresBotAuth) {
-    const botAuthed = await botAuth.isAuthed();
-    if (!botAuthed) {
+    const session = await discordAuth.getSession();
+    if (!session.isAdmin) {
       next('/dashboard');
       return;
     }
