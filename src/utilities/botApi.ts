@@ -1,5 +1,8 @@
 const SERVER_BASE_URL =
   process.env.VUE_APP_SERVER_URL || 'https://bar3-server.onrender.com';
+const BOT_API_BASE_URL =
+  process.env.VUE_APP_BOT_API_URL || SERVER_BASE_URL;
+const BOT_API_KEY = process.env.VUE_APP_BOT_API_KEY || '';
 
 async function botFetch(path: string, init: RequestInit = {}, body?: unknown) {
   const existingHeaders = init.headers;
@@ -14,14 +17,17 @@ async function botFetch(path: string, init: RequestInit = {}, body?: unknown) {
   }
 
   if (body !== undefined) extraHeaders['Content-Type'] = 'application/json';
+  if (BOT_API_KEY) extraHeaders['X-API-Key'] = BOT_API_KEY;
 
-  return fetch(`${SERVER_BASE_URL}${path}`, {
+  return fetch(`${BOT_API_BASE_URL}${path}`, {
     ...init,
     credentials: 'include',
     headers: extraHeaders,
     body: body !== undefined ? JSON.stringify(body) : init.body,
   });
 }
+
+
 
 export interface BotServer {
   id: string;
@@ -80,10 +86,10 @@ export const botApi = {
 
   /**
    * Send a message through the bot (distinct from the Politics & War mailer).
-   * Backend: POST /api/bot/send  { channelId, content }
+   * Backend: POST /api/bot/send  { message }
    */
-  async sendMessage(channelId: string, content: string): Promise<void> {
-    const res = await botFetch('/api/bot/send', { method: 'POST' }, { channelId, content });
+  async sendMessage(content: string): Promise<void> {
+    const res = await botFetch('/api/bot/send', { method: 'POST' }, { message: content });
     if (!res.ok) {
       throw new Error(await readError(res, 'Failed to send bot message'));
     }

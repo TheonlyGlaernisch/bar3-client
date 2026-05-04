@@ -11,18 +11,6 @@
         <v-icon small class="mr-1">mdi-send</v-icon>
         Send Bot Message
       </div>
-      <v-text-field
-        v-model="selectedChannelId"
-        label="Target channel ID"
-        hint="Discord channel snowflake ID (right-click a channel → Copy ID)"
-        persistent-hint
-        dark
-        dense
-        outlined
-        color="primary"
-        class="mb-2"
-        :disabled="sendLoading"
-      />
       <v-textarea
         v-model="messageContent"
         label="Message content"
@@ -40,7 +28,7 @@
       <v-btn
         color="primary"
         :loading="sendLoading"
-        :disabled="!selectedChannelId || !messageContent.trim()"
+        :disabled="!messageContent.trim()"
         @click="sendMessage"
       >
         <v-icon left>mdi-send</v-icon>
@@ -108,7 +96,6 @@ import { botApi, BotServer, BotCommand } from '@/utilities/botApi';
 @Component
 export default class BotPanel extends Vue {
   // Send message
-  selectedChannelId = '';
   messageContent = '';
   sendLoading = false;
   sendError = '';
@@ -157,12 +144,12 @@ export default class BotPanel extends Vue {
   }
 
   async sendMessage() {
-    if (!this.selectedChannelId || !this.messageContent.trim()) return;
+    if (!this.messageContent.trim()) return;
     this.sendLoading = true;
     this.sendError = '';
     this.sendSuccess = false;
     try {
-      await botApi.sendMessage(this.selectedChannelId, this.messageContent.trim());
+      await botApi.sendMessage(this.messageContent.trim());
       this.sendSuccess = true;
       this.messageContent = '';
     } catch (e) {
