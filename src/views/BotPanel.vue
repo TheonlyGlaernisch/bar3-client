@@ -112,7 +112,7 @@ export default class BotPanel extends Vue {
   commandsError = '';
 
   serverIconUrl(server: BotServer): string {
-    return `{server.icon}.png?size=64`;
+    return `${server.icon}.png?size=64`;
   }
 
   async created() {
