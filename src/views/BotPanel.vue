@@ -112,7 +112,9 @@ export default class BotPanel extends Vue {
   commandsError = '';
 
   serverIconUrl(server: BotServer): string {
-    return `${server.icon}.png?size=64`;
+    if (!server.icon || server.icon.includes('{')) return '';
+    if (/^https?:\/\//.test(server.icon)) return server.icon;
+    return `https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png?size=64`;
   }
 
   async created() {
