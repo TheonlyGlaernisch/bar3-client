@@ -5,18 +5,28 @@ const SERVER_BASE_URL =
   process.env.VUE_APP_SERVER_URL || 'https://bar3-server.onrender.com';
 
 type JsonValue = Record<string, unknown> | unknown[] | string | number | boolean | null;
+let inMemorySessionToken = '';
+
+function normalizeToken(raw: string): string {
+  return raw.replace(/^Bearer\s+/i, '').trim();
+}
 
 export function getV2Token(): string {
-  const raw =
+  const raw = inMemorySessionToken || (
     localStorage.getItem('pwSessionToken') ||
     localStorage.getItem('pwToken') ||
     localStorage.getItem('v2SessionToken') ||
-    '';
-  return raw.replace(/^Bearer\s+/i, '').trim();
+    ''
+  );
+  return normalizeToken(raw);
 }
 
 export function hasV2Credentials(): boolean {
   return !!(getV2Token() || (localStorage.getItem('apiKey') || '').trim());
+}
+
+export function clearV2Token(): void {
+  inMemorySessionToken = '';
 }
 
 function getToken(): string {
@@ -47,18 +57,19 @@ export const v2Api = {
     const res = await v2Fetch('/api/v2/auth/login', { method: 'POST' }, { apiKey });
     if (res.status !== 200) throw new Error((await res.json().catch(() => ({} as any)))?.error || 'Login failed');
     const data = await res.json();
-    const token = String(
+    const token = normalizeToken(String(
       data?.token ||
       data?.sessionToken ||
       data?.accessToken ||
       ''
-    ).replace(/^Bearer\s+/i, '').trim();
+    ));
     const accountId = String(
       data?.accountId ||
       data?.account?.id ||
       data?.user?.accountId ||
       ''
     ).trim();
+    inMemorySessionToken = token;
     return { token, accountId };
   },
 

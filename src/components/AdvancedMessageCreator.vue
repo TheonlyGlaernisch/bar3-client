@@ -98,7 +98,7 @@
       });
 
       this.digested = digested;
-      this.$emit('change', this.digested);
+      this.$emit('change', digested);
       this.$emit('css', this.css);
       this.$emit('html', this.html);
     }

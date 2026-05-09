@@ -36,7 +36,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import { hasV2Credentials, v2Api } from '../utilities/v2Api';
+import { clearV2Token, hasV2Credentials, v2Api } from '../utilities/v2Api';
 
 @Component
 export default class AccountManager extends Vue {
@@ -62,6 +62,7 @@ export default class AccountManager extends Vue {
       const state = await v2Api.getAutomationState().catch(() => null);
       if (state) this.$store.commit('setApplicationState', !!state.enabled);
     } catch (e) {
+      clearV2Token();
       const maybeMessage =
         typeof e === 'object' && e !== null && 'message' in e ? (e as any).message : undefined;
       this.error = maybeMessage || 'Login failed';
@@ -70,6 +71,7 @@ export default class AccountManager extends Vue {
   }
 
   logoutV2() {
+    clearV2Token();
     localStorage.removeItem('pwSessionToken');
     localStorage.removeItem('pwToken');
     localStorage.removeItem('v2SessionToken');
