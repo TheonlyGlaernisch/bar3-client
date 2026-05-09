@@ -49,13 +49,9 @@ export default class AccountManager extends Vue {
     this.error = '';
     this.statusMessage = null;
     try {
-      const res = await v2Api.loginWithPwApiKey(this.apiKey);
-      if (res.token) {
-        localStorage.setItem('pwSessionToken', res.token);
-      } else {
-        localStorage.removeItem('pwSessionToken');
-      }
-      if (res.accountId) localStorage.setItem('pwAccountId', res.accountId);
+      await v2Api.loginWithPwApiKey(this.apiKey);
+      localStorage.removeItem('pwSessionToken');
+      localStorage.removeItem('pwAccountId');
       localStorage.setItem('apiKey', this.apiKey);
       this.v2Session = hasV2Credentials();
       this.$store.commit('setLoggedIn', true);

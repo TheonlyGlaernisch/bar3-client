@@ -14,8 +14,9 @@ const BLOCKED_TAGS = new Set([
 ]);
 
 const URL_ATTRIBUTES = new Set(['href', 'src', 'xlink:href', 'srcdoc', 'action', 'formaction']);
+const SAFE_DATA_IMAGE_RE = /^data:image\/(?:png|gif|jpe?g|webp|avif|bmp);base64,[a-z0-9+/=]+$/i;
 
-function isUnsafeUrl(value: string): boolean {
+function isUnsafeUrl(attributeName: string, value: string): boolean {
   const normalized = value
     .split('')
     .filter((char) => {
@@ -27,7 +28,9 @@ function isUnsafeUrl(value: string): boolean {
   return normalized.startsWith('javascript:')
     || normalized.startsWith('vbscript:')
     || normalized.startsWith('data:text/html')
-    || normalized.startsWith('data:application');
+    || (normalized.startsWith('data:') && !(
+      (attributeName === 'src' || attributeName === 'xlink:href') && SAFE_DATA_IMAGE_RE.test(normalized)
+    ));
 }
 
 function sanitizeStyle(value: string): string {
@@ -72,7 +75,7 @@ export function sanitizeHtml(input: string): string {
         continue;
       }
 
-      if (URL_ATTRIBUTES.has(name) && isUnsafeUrl(value)) {
+      if (URL_ATTRIBUTES.has(name) && isUnsafeUrl(name, value)) {
         element.removeAttribute(attribute.name);
       }
     }

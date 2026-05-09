@@ -80,7 +80,7 @@
         preserveKeyFrames: false
       });
 
-      this.$emit('change', sanitizeHtml(digested));
+      this.$emit('change', digested);
     }
   }
 </script>

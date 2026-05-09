@@ -97,7 +97,7 @@
         preserveKeyFrames: false
       });
 
-      this.digested = sanitizeHtml(digested);
+      this.digested = digested;
       this.$emit('change', this.digested);
       this.$emit('css', this.css);
       this.$emit('html', this.html);
