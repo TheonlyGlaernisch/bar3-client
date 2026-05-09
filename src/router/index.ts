@@ -12,6 +12,7 @@ import DiscordLogin from '@/views/DiscordLogin.vue'
 import DiscordCallback from '@/views/DiscordCallback.vue'
 import BotPanel from '@/views/BotPanel.vue'
 import { discordAuth } from '@/utilities/discordAuth'
+import { normalizeReturnTo } from '@/utilities/serverUrls'
 
 Vue.use(VueRouter)
 
@@ -61,8 +62,8 @@ router.beforeEach(async (to, _from, next) => {
   // Consume a ?returnTo= parameter left by the server after OAuth, but only
   // accept relative paths to prevent open-redirect attacks.
   if (to.query.returnTo) {
-    const returnTo = to.query.returnTo as string;
-    if (returnTo.startsWith('/') && !returnTo.startsWith('//')) {
+    const returnTo = normalizeReturnTo(to.query.returnTo);
+    if (returnTo) {
       next({ path: returnTo, replace: true });
       return;
     }

@@ -30,6 +30,7 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { discordAuth } from '@/utilities/discordAuth';
+import { normalizeReturnTo } from '@/utilities/serverUrls';
 
 @Component
 export default class DiscordCallback extends Vue {
@@ -51,13 +52,7 @@ export default class DiscordCallback extends Vue {
 
     // Forward any ?returnTo= the server attached to this callback URL, but
     // only accept relative paths to prevent open-redirect attacks.
-    const returnTo = this.$route.query.returnTo;
-    const target =
-      typeof returnTo === 'string' &&
-      returnTo.startsWith('/') &&
-      !returnTo.startsWith('//')
-        ? returnTo
-        : '/';
+    const target = normalizeReturnTo(this.$route.query.returnTo) || '/';
     this.$router.replace(target);
   }
 }

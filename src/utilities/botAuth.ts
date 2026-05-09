@@ -1,5 +1,4 @@
-const SERVER_BASE_URL =
-  process.env.VUE_APP_SERVER_URL || 'https://bar3-server.onrender.com';
+import { AUTH_BASE_URL } from '@/utilities/serverUrls';
 
 // In-memory cache so the server is only contacted once per page load.
 let botSessionCache: boolean | null = null;
@@ -14,7 +13,7 @@ export const botAuth = {
   async isAuthed(): Promise<boolean> {
     if (botSessionCache !== null) return botSessionCache;
     try {
-      const res = await fetch(`${SERVER_BASE_URL}/auth/bot/session`, {
+      const res = await fetch(`${AUTH_BASE_URL}/auth/bot/session`, {
         credentials: 'include',
       });
       botSessionCache = res.ok;
