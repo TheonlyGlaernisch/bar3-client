@@ -16,7 +16,14 @@ const BLOCKED_TAGS = new Set([
 const URL_ATTRIBUTES = new Set(['href', 'src', 'xlink:href', 'srcdoc', 'action', 'formaction']);
 
 function isUnsafeUrl(value: string): boolean {
-  const normalized = value.replace(/[\u0000-\u001f\u007f\s]+/g, '').toLowerCase();
+  const normalized = value
+    .split('')
+    .filter((char) => {
+      const code = char.charCodeAt(0);
+      return code > 31 && code !== 127 && !/\s/.test(char);
+    })
+    .join('')
+    .toLowerCase();
   return normalized.startsWith('javascript:')
     || normalized.startsWith('vbscript:')
     || normalized.startsWith('data:text/html')
