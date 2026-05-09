@@ -10,7 +10,7 @@ export default new Vuex.Store({
   state: {
     isApplicationOn: false,
     // serverIP: 'http://'+location.hostname+':'+location.port,
-    serverIP: 'https://bar3-server.onrender.com',
+    serverIP: process.env.VUE_APP_API_URL || process.env.VUE_APP_SERVER_URL || 'https://bar3-server.onrender.com',
     sentMessages: [],
     lastRefreshed: 0,
     packageVersion: process.env.PACKAGE_VERSION || '0',

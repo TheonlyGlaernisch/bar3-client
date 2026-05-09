@@ -1,8 +1,4 @@
-const SERVER_BASE_URL =
-  process.env.VUE_APP_SERVER_URL || 'https://bar3-server.onrender.com';
-const BOT_API_BASE_URL =
-  process.env.VUE_APP_BOT_API_URL || SERVER_BASE_URL;
-const BOT_API_KEY = process.env.VUE_APP_BOT_API_KEY || '';
+import { AUTH_BASE_URL } from '@/utilities/serverUrls';
 
 async function botFetch(path: string, init: RequestInit = {}, body?: unknown) {
   const existingHeaders = init.headers;
@@ -17,9 +13,7 @@ async function botFetch(path: string, init: RequestInit = {}, body?: unknown) {
   }
 
   if (body !== undefined) extraHeaders['Content-Type'] = 'application/json';
-  if (BOT_API_KEY) extraHeaders['X-API-Key'] = BOT_API_KEY;
-
-  return fetch(`${BOT_API_BASE_URL}${path}`, {
+  return fetch(`${AUTH_BASE_URL}${path}`, {
     ...init,
     credentials: 'include',
     headers: extraHeaders,

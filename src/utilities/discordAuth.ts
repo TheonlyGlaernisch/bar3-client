@@ -1,5 +1,4 @@
-const SERVER_BASE_URL =
-  process.env.VUE_APP_SERVER_URL || 'https://bar3-server.onrender.com';
+import { AUTH_BASE_URL, normalizeReturnTo } from '@/utilities/serverUrls';
 
 interface SessionData {
   authenticated: boolean;
@@ -17,9 +16,10 @@ export const discordAuth = {
    * to the original page after a successful login.
    */
   redirectToDiscord(returnTo?: string): void {
-    const url = new URL(`${SERVER_BASE_URL}/auth/discord`);
-    if (returnTo) {
-      url.searchParams.set('returnTo', returnTo);
+    const url = new URL(`${AUTH_BASE_URL}/auth/discord`);
+    const safeReturnTo = normalizeReturnTo(returnTo);
+    if (safeReturnTo) {
+      url.searchParams.set('returnTo', safeReturnTo);
     }
     window.location.href = url.toString();
   },
@@ -33,7 +33,7 @@ export const discordAuth = {
   async getSession(): Promise<SessionData> {
     if (sessionCache !== null) return sessionCache;
     try {
-      const res = await fetch(`${SERVER_BASE_URL}/auth/session`, {
+      const res = await fetch(`${AUTH_BASE_URL}/auth/session`, {
         credentials: 'include',
       });
       if (res.ok) {
@@ -75,6 +75,6 @@ export const discordAuth = {
   logout(): void {
     sessionCache = null;
     localStorage.removeItem('discordSessionToken');
-    window.location.href = `${SERVER_BASE_URL}/auth/logout`;
+    window.location.href = `${AUTH_BASE_URL}/auth/logout`;
   },
 };

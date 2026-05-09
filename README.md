@@ -23,6 +23,18 @@ npm run build
 npm run lint
 ```
 
+## Auth/cookie configuration for Safari/iOS with two domains
+
+If your frontend and backend use different domains, Safari/iOS may block third-party cookies for
+Discord session checks. Set:
+
+- `VUE_APP_API_URL` to your backend API domain
+- `VUE_APP_AUTH_URL` to a same-site frontend-domain reverse proxy that forwards `/auth/*` and
+  `/api/bot/*` to the backend
+
+This keeps cookie-authenticated requests first-party on Apple devices while leaving API routing
+configurable.
+
 ## Required server-side changes (bar3-server)
 
 One file in `TheonlyGlaernisch/bar3-server` **must** be edited for the Dashboard to work
@@ -107,4 +119,3 @@ Then in `src/api/index.ts`, two edits:
 -    },
 +    apiDetails: scopedSession.apiDetails ?? { used: state.requestsUsed, max: state.requestsMax },
 ```
-

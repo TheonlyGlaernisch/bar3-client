@@ -1,5 +1,4 @@
-const SERVER_BASE_URL =
-  process.env.VUE_APP_SERVER_URL || 'https://bar3-server.onrender.com';
+import { API_BASE_URL } from '@/utilities/serverUrls';
 
 type JsonValue = Record<string, unknown> | unknown[] | string | number | boolean | null;
 
@@ -17,7 +16,7 @@ export async function apiFetch(
   if (apiKey) headers['x-api-key'] = apiKey;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
 
-  const response = await fetch(`${SERVER_BASE_URL}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     credentials: 'include',
     headers,
@@ -26,5 +25,4 @@ export async function apiFetch(
 
   return response;
 }
-
 

@@ -57,6 +57,7 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { discordAuth } from '@/utilities/discordAuth';
+import { normalizeReturnTo } from '@/utilities/serverUrls';
 
 @Component
 export default class DiscordLogin extends Vue {
@@ -100,8 +101,7 @@ export default class DiscordLogin extends Vue {
   }
 
   login() {
-    const returnTo = this.$route.query.returnTo;
-    discordAuth.redirectToDiscord(typeof returnTo === 'string' && returnTo ? returnTo : undefined);
+    discordAuth.redirectToDiscord(normalizeReturnTo(this.$route.query.returnTo));
   }
 }
 </script>
