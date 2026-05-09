@@ -1,6 +1,7 @@
 const FALLBACK_SERVER_URL = 'https://bar3-server.onrender.com';
 
 function normalizeBaseUrl(value: string): string {
+  // Keep URL joining predictable by removing trailing slashes.
   return value.replace(/\/+$/, '');
 }
 
@@ -15,6 +16,7 @@ export const AUTH_BASE_URL = normalizeBaseUrl(
 );
 
 export function normalizeReturnTo(value: unknown): string | undefined {
+  // Accept only app-internal relative paths to avoid open-redirect vectors.
   if (typeof value !== 'string') return undefined;
   if (!value.startsWith('/') || value.startsWith('//')) return undefined;
   return value;
