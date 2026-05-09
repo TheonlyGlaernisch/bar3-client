@@ -36,24 +36,28 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import { v2Api } from '../utilities/v2Api';
+import { hasV2Credentials, v2Api } from '../utilities/v2Api';
 
 @Component
 export default class AccountManager extends Vue {
   apiKey = localStorage.getItem('apiKey') || '';
   error = '';
   statusMessage: { type: string; text: string } | null = null;
-  v2Session = localStorage.getItem('pwSessionToken') || '';
+  v2Session = hasV2Credentials();
 
   async loginV2() {
     this.error = '';
     this.statusMessage = null;
     try {
       const res = await v2Api.loginWithPwApiKey(this.apiKey);
-      localStorage.setItem('pwSessionToken', res.token);
-      localStorage.setItem('pwAccountId', res.accountId);
+      if (res.token) {
+        localStorage.setItem('pwSessionToken', res.token);
+      } else {
+        localStorage.removeItem('pwSessionToken');
+      }
+      if (res.accountId) localStorage.setItem('pwAccountId', res.accountId);
       localStorage.setItem('apiKey', this.apiKey);
-      this.v2Session = res.token;
+      this.v2Session = hasV2Credentials();
       this.$store.commit('setLoggedIn', true);
       this.$router.push({ path: '/' });
       this.statusMessage = { type: 'success', text: 'User loaded successfully' };
@@ -65,14 +69,18 @@ export default class AccountManager extends Vue {
       const maybeMessage =
         typeof e === 'object' && e !== null && 'message' in e ? (e as any).message : undefined;
       this.error = maybeMessage || 'Login failed';
-      this.v2Session = '';
+      this.v2Session = hasV2Credentials();
     }
   }
 
   logoutV2() {
     localStorage.removeItem('pwSessionToken');
+    localStorage.removeItem('pwToken');
+    localStorage.removeItem('v2SessionToken');
     localStorage.removeItem('pwAccountId');
-    this.v2Session = '';
+    localStorage.removeItem('apiKey');
+    this.apiKey = '';
+    this.v2Session = false;
     this.$store.commit('setLoggedIn', false);
     this.$store.commit('setApplicationState', false);
     this.statusMessage = { type: 'success', text: 'Logged out' };

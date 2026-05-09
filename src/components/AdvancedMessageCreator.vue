@@ -46,6 +46,7 @@
   import "prismjs/themes/prism-tomorrow.css";
   import juice from 'juice';
   import { debounce } from 'debounce';
+  import { sanitizeHtml } from '@/utilities/sanitizeHtml';
 
   @Component({
     components: {
@@ -89,15 +90,15 @@
     }
 
     digest() {
-      const digested = juice(this.html, {
+      const digested = juice(sanitizeHtml(this.html), {
         extraCss: this.css.replace(/\n/g, ''),
         preserveMediaQueries: false,
         preserveFontFaces: false,
         preserveKeyFrames: false
       });
 
-      this.digested = digested;
-      this.$emit('change', digested);
+      this.digested = sanitizeHtml(digested);
+      this.$emit('change', this.digested);
       this.$emit('css', this.css);
       this.$emit('html', this.html);
     }

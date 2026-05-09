@@ -20,7 +20,7 @@ export default new Vuex.Store({
       max: 0,
     },
     newUpdate: null as null | GitHubRelease,
-    isLoggedIn: !!localStorage.getItem('pwSessionToken'),
+    isLoggedIn: !!(localStorage.getItem('pwSessionToken') || localStorage.getItem('apiKey')),
     isDiscordAuthed: false,
     isAdmin: false,
     isBotAuthed: false

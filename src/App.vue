@@ -39,7 +39,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import SideBar from '@/components/SideBar.vue';
 import V2AutomationToggle from '@/components/V2AutomationToggle.vue';
-import { v2Api } from '@/utilities/v2Api';
+import { hasV2Credentials, v2Api } from '@/utilities/v2Api';
 import { discordAuth } from '@/utilities/discordAuth';
 
 @Component({
@@ -70,8 +70,7 @@ export default class App extends Vue {
 
     await Promise.all([
       (async () => {
-        const token = localStorage.getItem('pwSessionToken') || '';
-        if (!token) return;
+        if (!hasV2Credentials()) return;
         try {
           const state = await v2Api.getAutomationState();
           this.$store.commit('setApplicationState', !!state.enabled);

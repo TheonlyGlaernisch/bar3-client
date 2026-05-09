@@ -6,8 +6,21 @@ const SERVER_BASE_URL =
 
 type JsonValue = Record<string, unknown> | unknown[] | string | number | boolean | null;
 
+export function getV2Token(): string {
+  const raw =
+    localStorage.getItem('pwSessionToken') ||
+    localStorage.getItem('pwToken') ||
+    localStorage.getItem('v2SessionToken') ||
+    '';
+  return raw.replace(/^Bearer\s+/i, '').trim();
+}
+
+export function hasV2Credentials(): boolean {
+  return !!(getV2Token() || (localStorage.getItem('apiKey') || '').trim());
+}
+
 function getToken(): string {
-  return localStorage.getItem('pwSessionToken') || '';
+  return getV2Token();
 }
 
 async function v2Fetch(path: string, init: RequestInit = {}, body?: JsonValue) {
@@ -17,6 +30,8 @@ async function v2Fetch(path: string, init: RequestInit = {}, body?: JsonValue) {
 
   const token = getToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
+  const apiKey = (localStorage.getItem('apiKey') || '').trim();
+  if (apiKey) headers['x-api-key'] = apiKey;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
 
   return fetch(`${SERVER_BASE_URL}${path}`, {
@@ -31,7 +46,20 @@ export const v2Api = {
   async loginWithPwApiKey(apiKey: string): Promise<{ token: string; accountId: string }> {
     const res = await v2Fetch('/api/v2/auth/login', { method: 'POST' }, { apiKey });
     if (res.status !== 200) throw new Error((await res.json().catch(() => ({} as any)))?.error || 'Login failed');
-    return res.json();
+    const data = await res.json();
+    const token = String(
+      data?.token ||
+      data?.sessionToken ||
+      data?.accessToken ||
+      ''
+    ).replace(/^Bearer\s+/i, '').trim();
+    const accountId = String(
+      data?.accountId ||
+      data?.account?.id ||
+      data?.user?.accountId ||
+      ''
+    ).trim();
+    return { token, accountId };
   },
 
   async getAutomationState(): Promise<{ enabled: boolean }> {
