@@ -6,21 +6,20 @@
 
 <script lang="ts">
   import {Component, Vue} from 'vue-property-decorator';
-  import markup from 'marked';
+  import MarkdownIt from 'markdown-it';
   import main from '!!raw-loader!@/assets/help/index.md';
   import { sanitizeHtml } from '@/utilities/sanitizeHtml';
 
+  const markdownParser = new MarkdownIt({
+    html: false,
+    linkify: true,
+    breaks: true,
+  });
+
   @Component
   export default class Help extends Vue {
-    mounted() {
-      markup.setOptions({
-        gfm: true,
-        breaks: true,
-      });
-    }
-    
     get marked() {
-      return sanitizeHtml(markup(main));
+      return sanitizeHtml(markdownParser.render(main));
     }
   }
 </script>
