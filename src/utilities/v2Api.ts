@@ -1,6 +1,7 @@
 import { apiFetch } from '@/utilities/authFetch';
 import getAppData from '@/actions/getAppData';
 import { API_BASE_URL } from '@/utilities/serverUrls';
+import { getDiscordAuthHeaders } from '@/utilities/discordToken';
 
 type JsonValue = Record<string, unknown> | unknown[] | string | number | boolean | null;
 let inMemorySessionToken = '';
@@ -33,11 +34,16 @@ function getToken(): string {
 
 async function v2Fetch(path: string, init: RequestInit = {}, body?: JsonValue) {
   const headers: Record<string, string> = {
+    ...getDiscordAuthHeaders(),
     ...(init.headers as Record<string, string> || {}),
   };
 
+  const hasAuthorizationHeader = !!headers.Authorization;
   const token = getToken();
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (token) {
+    headers['x-session-token'] = token;
+    if (!hasAuthorizationHeader) headers['Authorization'] = `Bearer ${token}`;
+  }
   const apiKey = (localStorage.getItem('apiKey') || '').trim();
   if (apiKey) headers['x-api-key'] = apiKey;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
