@@ -1,11 +1,10 @@
 import { apiFetch } from '@/utilities/authFetch';
-import { v2Api } from '@/utilities/v2Api';
+import { hasV2Credentials, v2Api } from '@/utilities/v2Api';
 
 export default async function setApplicationState(applicationOn: boolean) {
   let error;
 
-  const token = localStorage.getItem('pwSessionToken') || '';
-  if (token) {
+  if (hasV2Credentials()) {
     try {
       await v2Api.setAutomationState(applicationOn);
       return true;

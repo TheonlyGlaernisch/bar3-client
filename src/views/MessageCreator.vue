@@ -212,7 +212,7 @@
   import TestMessageDialog from '@/components/TestMessageDialog.vue';
   import sendMessage from '@/actions/sendMessage';
   import UpdateAvailableBanner from '@/components/UpdateAvailableBanner.vue';
-  import { v2Api } from '@/utilities/v2Api';
+  import { hasV2Credentials, v2Api } from '@/utilities/v2Api';
   import ConfirmDialog from '@/components/ConfirmDialog.vue';
   
   @Component({
@@ -335,8 +335,6 @@
         return;
       }
 
-      const token = localStorage.getItem('pwSessionToken') || '';
-
       const selectedEditor = this.editorTab === 1 ? 1 : 0;
       const newConfig = {
         messageSubject: this.subject,
@@ -359,7 +357,7 @@
       }
 
       // v2 per-user template save (MongoDB). This is what automation uses.
-      if (!token) {
+      if (!hasV2Credentials()) {
         alert('To save your auto-message to MongoDB, go to Account and log in first.');
         return;
       }
@@ -449,7 +447,7 @@
       this.bulkResult = null;
       this.bulkError = '';
       try {
-        if (!localStorage.getItem('pwSessionToken')) {
+        if (!hasV2Credentials()) {
           this.bulkError = 'Unauthorized: please log in from Account with your Politics & War API key.';
           return;
         }
@@ -496,7 +494,7 @@
       this.bulkResult = null;
       this.bulkError = '';
       try {
-        if (!localStorage.getItem('pwSessionToken')) {
+        if (!hasV2Credentials()) {
           this.bulkError = 'Unauthorized: please log in from Account with your Politics & War API key.';
           return;
         }

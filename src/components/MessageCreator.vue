@@ -16,6 +16,7 @@
   import juice from 'juice';
   import quillStyles from '!!raw-loader!quill/dist/quill.snow.css';
   import { debounce } from 'debounce';
+  import { sanitizeHtml } from '@/utilities/sanitizeHtml';
   
   @Component
   export default class MessageCreator extends Vue {
@@ -46,7 +47,7 @@
 
     @Watch('inputHTML')
     onInputHTMLChanged(value: string) {
-      this.messageQuill = value || '';
+      this.messageQuill = sanitizeHtml(value || '');
       this.editor?.clipboard.dangerouslyPasteHTML(this.messageQuill);
     }
 
@@ -72,7 +73,7 @@
     }
 
     digestQuill(html: string) {
-      const digested = juice(html, {
+      const digested = juice(sanitizeHtml(html), {
         extraCss: quillStyles,
         preserveMediaQueries: false,
         preserveFontFaces: false,

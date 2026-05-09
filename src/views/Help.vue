@@ -8,6 +8,7 @@
   import {Component, Vue} from 'vue-property-decorator';
   import markup from 'marked';
   import main from '!!raw-loader!@/assets/help/index.md';
+  import { sanitizeHtml } from '@/utilities/sanitizeHtml';
 
   @Component
   export default class Help extends Vue {
@@ -19,7 +20,7 @@
     }
     
     get marked() {
-      return markup(main);
+      return sanitizeHtml(markup(main));
     }
   }
 </script>
