@@ -5,7 +5,15 @@ const webpack = require('webpack');
 
 module.exports = {
   "transpileDependencies": [
-    "vuetify"
+    "vuetify",
+    "juice",
+    "cheerio",
+    "htmlparser2",
+    "parse5",
+    "dom-serializer",
+    "domhandler",
+    "domutils",
+    "entities"
   ],
   configureWebpack: {
     plugins: [
